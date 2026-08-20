@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Pyodide Tool</title>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 20px;
+    font: 16px Arial, sans-serif;
+    background: #f2f2f2;
+    color: #000;
+}
+
+.config {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto 30px;
+    padding: 20px;
+    background: #fff;
+    border: 2px solid #000;
+}
+
+.config h1 {
+    margin: 0 0 20px;
+}
+
+.campo {
+    margin-bottom: 15px;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+    width: 100%;
+    padding: 9px;
+    border: 1px solid #000;
+    font: inherit;
+}
+
+#gerar {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    background: #000;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#gerar:disabled {
+    opacity: .5;
+    cursor: wait;
+}
+
+#status {
+    margin-top: 10px;
+    font: 13px monospace;
+    white-space: pre-wrap;
+}
+
+#erro {
+    display: none;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 15px;
+    border: 2px solid #900;
+    color: #900;
+    background: #fff;
+    white-space: pre-wrap;
+}
+
+#resultado {
+    max-width: 900px;
+    margin: auto;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     PARAMETROS
+     ========================================================= -->
+
+<section class="config">
+
+    <h1>Minha Tool</h1>
+
+
+    <div class="campo">
+
+        <label for="nome">
+            Nome
+        </label>
+
+        <input
+            id="nome"
+            type="text"
+            value="João"
+        >
+
+    </div>
+
+
+    <div class="campo">
+
+        <label for="ano">
+            Ano
+        </label>
+
+        <input
+            id="ano"
+            type="number"
+            value="2026"
+        >
+
+    </div>
+
+
+    <button id="gerar">
+        GERAR
+    </button>
+
+
+    <div id="status"></div>
+
+</section>
+
+
+<div id="erro"></div>
+
+<main id="resultado"></main>
+
+
+<!-- =========================================================
+     PYTHON DA TOOL
+     
+     CONTRATO:
+     
+         main(params) -> HTML
+     
+     params é um dict Python.
+     ========================================================= -->
+
+<script type="text/python" id="python">
+
+def main(params):
+
+    nome = params["nome"]
+    ano = params["ano"]
+
+    return f"""
+        <h1>Olá, {nome}!</h1>
+
+        <p>
+            Ano selecionado: {ano}
+        </p>
+    """
+
+
+</script>
+
+
+<!-- =========================================================
+     INFRAESTRUTURA
+     ========================================================= -->
+
+<script>
+
+const botao =
+    document.getElementById("gerar");
+
+const status =
+    document.getElementById("status");
+
+const erro =
+    document.getElementById("erro");
+
+const resultado =
+    document.getElementById("resultado");
+
+
+let pyodide = null;
+
+
+// =============================================================
+// PYODIDE
+// =============================================================
+
+async function carregarPyodide() {
+
+    if (pyodide)
+        return pyodide;
+
+
+    status.textContent =
+        "🐍 Carregando Pyodide...";
+
+
+    pyodide =
+        await loadPyodide();
+
+
+    return pyodide;
+
+}
+
+
+// =============================================================
+// PARAMETROS
+//
+// ESTE É O ÚNICO PONTO DA UI QUE A TOOL PERSONALIZA.
+// =============================================================
+
+function getParams() {
+
+    return {
+
+        nome:
+            document.getElementById(
+                "nome"
+            ).value,
+
+        ano:
+            Number(
+                document.getElementById(
+                    "ano"
+                ).value
+            ),
+
+    };
+
+}
+
+
+// =============================================================
+// EXECUTAR PYTHON
+// =============================================================
+
+async function executar(params) {
+
+    const py =
+        await carregarPyodide();
+
+
+    // ---------------------------------------------------------
+    // Carrega o código Python
+    // ---------------------------------------------------------
+
+    const codigo =
+        document.getElementById(
+            "python"
+        ).textContent;
+
+
+    await py.runPythonAsync(
+        codigo
+    );
+
+
+    // ---------------------------------------------------------
+    // Converte JSON/JS → dict Python
+    // ---------------------------------------------------------
+
+    const paramsPython =
+        py.toPy(params);
+
+
+    // ---------------------------------------------------------
+    // Obtém main
+    // ---------------------------------------------------------
+
+    const main =
+        py.globals.get("main");
+
+
+    try {
+
+        // -----------------------------------------------------
+        // main(params)
+        // -----------------------------------------------------
+
+        const retorno =
+            main(paramsPython);
+
+
+        // -----------------------------------------------------
+        // Python → JavaScript
+        // -----------------------------------------------------
+
+        return retorno.toJs
+            ? retorno.toJs()
+            : retorno;
+
+    }
+
+    finally {
+
+        paramsPython.destroy();
+        main.destroy();
+
+    }
+
+}
+
+
+// =============================================================
+// GERAR
+// =============================================================
+
+async function gerar() {
+
+    botao.disabled = true;
+
+    erro.style.display = "none";
+
+    erro.textContent = "";
+
+
+    try {
+
+        // -----------------------------------------------------
+        // Monta JSON
+        // -----------------------------------------------------
+
+        const params =
+            getParams();
+
+
+        status.textContent =
+            "⚙️ Gerando...";
+
+
+        // -----------------------------------------------------
+        // Python
+        // -----------------------------------------------------
+
+        const html =
+            await executar(
+                params
+            );
+
+
+        // -----------------------------------------------------
+        // Resultado
+        // -----------------------------------------------------
+
+        resultado.innerHTML =
+            html;
+
+
+        status.textContent =
+            "✓ Pronto.";
+
+    }
+
+    catch (e) {
+
+        console.error(e);
+
+        erro.style.display =
+            "block";
+
+        erro.textContent =
+            e?.stack ||
+            e?.message ||
+            String(e);
+
+        status.textContent =
+            "❌ Erro.";
+
+    }
+
+    finally {
+
+        botao.disabled =
+            false;
+
+    }
+
+}
+
+
+botao.addEventListener(
+    "click",
+    gerar
+);
+
+</script>
+
+
+</body>
+
+</html>

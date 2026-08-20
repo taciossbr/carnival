@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>HTML TOOL</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+            padding: 20px;
+
+            font:
+                16px
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #f2f2f2;
+            color: #000;
+
+        }
+
+
+        /* =========================================================
+           CONFIGURAÇÃO
+           ========================================================= */
+
+        .config {
+
+            width: 100%;
+            max-width: 500px;
+
+            margin: 0 auto;
+            padding: 20px;
+
+            background: #fff;
+            border: 3px solid #000;
+
+        }
+
+
+        .config h1 {
+
+            margin: 0 0 20px;
+
+            padding-bottom: 10px;
+
+            border-bottom: 4px solid #000;
+
+            font-size: 24px;
+            text-align: center;
+
+        }
+
+
+        .campo {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .campo label {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            font-weight: bold;
+
+        }
+
+
+        .campo input,
+        .campo select,
+        .campo textarea {
+
+            width: 100%;
+
+            padding: 10px;
+
+            border: 2px solid #000;
+
+            background: #fff;
+            color: #000;
+
+            font-size: 16px;
+
+        }
+
+
+        button {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: 0;
+
+            background: #000;
+            color: #fff;
+
+            font-size: 18px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        button:hover {
+            opacity: .8;
+        }
+
+
+        button:disabled {
+
+            opacity: .5;
+
+            cursor: wait;
+
+        }
+
+
+        /* =========================================================
+           STATUS / ERRO
+           ========================================================= */
+
+        #status {
+
+            margin-top: 15px;
+
+            font-family: monospace;
+            font-size: 13px;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        #erro {
+
+            display: none;
+
+            max-width: 900px;
+
+            margin: 20px auto;
+
+            padding: 15px;
+
+            border: 3px solid #900;
+
+            background: #fff;
+
+            color: #900;
+
+            font-family: monospace;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           RESULTADO
+           ========================================================= */
+
+        #resultado {
+
+            margin-top: 30px;
+
+        }
+
+
+        /* =========================================================
+           IMPRESSÃO
+           ========================================================= */
+
+        @media print {
+
+            html,
+            body {
+
+                margin: 0;
+                padding: 0;
+
+                background: #fff;
+
+            }
+
+
+            .config,
+            #status,
+            #erro {
+
+                display: none !important;
+
+            }
+
+
+            #resultado {
+
+                margin: 0;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         CONFIGURAÇÃO
+
+         Adicione/remova parâmetros conforme necessário.
+
+         O objeto PARAMETROS abaixo será preenchido automaticamente
+         a partir dos campos marcados com data-param.
+         ========================================================= -->
+
+    <section class="config">
+
+        <h1>
+            HTML TOOL
+        </h1>
+
+
+        <!-- =====================================================
+             PARÂMETRO DE EXEMPLO
+             ===================================================== -->
+
+        <div class="campo">
+
+            <label for="texto">
+                Texto
+            </label>
+
+            <input
+                type="text"
+                id="texto"
+                data-param="texto"
+                value="Olá mundo!"
+            >
+
+        </div>
+
+
+        <!-- =====================================================
+             OUTRO PARÂMETRO DE EXEMPLO
+
+             <div class="campo">
+
+                 <label for="numero">
+                     Número
+                 </label>
+
+                 <input
+                     type="number"
+                     id="numero"
+                     data-param="numero"
+                     value="10"
+                 >
+
+             </div>
+             ===================================================== -->
+
+
+        <button id="gerar">
+            GERAR
+        </button>
+
+
+        <div id="status"></div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ERRO
+         ========================================================= -->
+
+    <div id="erro"></div>
+
+
+    <!-- =========================================================
+         RESULTADO
+         ========================================================= -->
+
+    <div id="resultado"></div>
+
+
+    <script>
+
+        // =========================================================
+        // ELEMENTOS
+        // =========================================================
+
+        const botao =
+            document.getElementById("gerar");
+
+        const status =
+            document.getElementById("status");
+
+        const erro =
+            document.getElementById("erro");
+
+        const resultado =
+            document.getElementById("resultado");
+
+
+        // =========================================================
+        // LER PARÂMETROS
+        //
+        // Todo campo com data-param entra automaticamente no objeto.
+        // =========================================================
+
+        function obterParametros() {
+
+            const parametros = {};
+
+
+            document
+                .querySelectorAll("[data-param]")
+                .forEach(
+                    campo => {
+
+                        const nome =
+                            campo.dataset.param;
+
+
+                        let valor =
+                            campo.value;
+
+
+                        // -----------------------------------------
+                        // Conversão básica de tipos
+                        // -----------------------------------------
+
+                        if (
+                            campo.type === "number"
+                        ) {
+
+                            valor =
+                                Number(valor);
+
+                        }
+
+
+                        else if (
+                            campo.type === "checkbox"
+                        ) {
+
+                            valor =
+                                campo.checked;
+
+                        }
+
+
+                        parametros[nome] =
+                            valor;
+
+                    }
+                );
+
+
+            return parametros;
+
+        }
+
+
+        // =========================================================
+        // GERAR
+        // =========================================================
+
+        botao.addEventListener(
+            "click",
+            gerar
+        );
+
+
+        async function gerar() {
+
+            erro.style.display = "none";
+
+            erro.textContent = "";
+
+            resultado.innerHTML = "";
+
+            botao.disabled = true;
+
+
+            try {
+
+                // =================================================
+                // PARÂMETROS
+                // =================================================
+
+                const PARAMETROS =
+                    obterParametros();
+
+
+                status.textContent =
+                    "⚙️ Processando...";
+
+
+                // =================================================
+                // PROCESSAMENTO
+                //
+                // Coloque aqui a lógica da aplicação.
+                //
+                // Entrada:
+                //     PARAMETROS
+                //
+                // Saída:
+                //     html
+                // =================================================
+
+                const html = `
+
+                    <div>
+
+                        <h1>
+                            ${PARAMETROS.texto}
+                        </h1>
+
+                    </div>
+
+                `;
+
+
+                // =================================================
+                // RENDER
+                // =================================================
+
+                resultado.innerHTML =
+                    html;
+
+
+                // =================================================
+                // OCULTAR CONFIGURAÇÃO
+                // =================================================
+
+                document
+                    .querySelector(".config")
+                    .style.display = "none";
+
+
+                status.textContent =
+                    "✓ Gerado com sucesso.";
+
+            }
+
+
+            catch (e) {
+
+                console.error(e);
+
+                erro.style.display =
+                    "block";
+
+                erro.textContent =
+                    "ERRO:\\n\\n" +
+                    (
+                        e?.stack ||
+                        e?.message ||
+                        String(e)
+                    );
+
+                status.textContent =
+                    "❌ Falha ao gerar.";
+
+            }
+
+
+            finally {
+
+                botao.disabled =
+                    false;
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

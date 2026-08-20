@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<meta name="theme-color" content="#111">
+
+<title>📋 Tarefas</title>
+
+<style>
+
+:root{
+  --bg:#f3f3f3;
+  --card:#fff;
+  --ink:#111;
+  --muted:#666;
+  --line:#d8d8d8;
+  --accent:#111;
+  --danger:#b00020;
+  --shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+html,
+body{
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+  min-height:100vh;
+}
+
+button,
+input{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  max-width:760px;
+  margin:auto;
+  padding:14px 12px 90px;
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:12px;
+}
+
+h1{
+  font-size:25px;
+  margin:0;
+  font-weight:900;
+}
+
+.sub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:3px;
+}
+
+.actions{
+  display:flex;
+  gap:7px;
+  align-items:center;
+}
+
+.btn{
+  border:2px solid var(--ink);
+  background:#fff;
+  color:#111;
+  border-radius:10px;
+  padding:9px 11px;
+  font-weight:800;
+}
+
+.btn.dark{
+  background:#111;
+  color:#fff;
+}
+
+.btn:active{
+  transform:scale(.97);
+}
+
+
+/* =========================================================
+   CHECKBOX ESPAÇO PARA ESCREVER
+   ========================================================= */
+
+.writeSpaceOption{
+  display:flex;
+  align-items:center;
+  gap:7px;
+
+  border:2px solid var(--ink);
+  border-radius:10px;
+
+  background:#fff;
+
+  padding:8px 10px;
+
+  font-size:13px;
+  font-weight:800;
+
+  cursor:pointer;
+
+  user-select:none;
+}
+
+.writeSpaceOption input{
+  width:18px;
+  height:18px;
+
+  margin:0;
+
+  accent-color:#111;
+
+  cursor:pointer;
+}
+
+
+/* =========================================================
+   EDITOR
+   ========================================================= */
+
+.editor{
+  background:var(--card);
+  border:2px solid var(--ink);
+  border-radius:14px;
+  padding:12px;
+  box-shadow:var(--shadow);
+  margin-bottom:12px;
+}
+
+.addrow{
+  display:flex;
+  gap:7px;
+}
+
+#taskInput{
+  flex:1;
+  min-width:0;
+
+  border:2px solid #aaa;
+  border-radius:10px;
+
+  padding:11px 12px;
+
+  outline:none;
+  font-size:17px;
+}
+
+#taskInput:focus{
+  border-color:#111;
+}
+
+#addBtn{
+  min-width:52px;
+}
+
+.suggestions{
+  display:flex;
+  gap:6px;
+
+  overflow-x:auto;
+
+  padding-top:8px;
+
+  scrollbar-width:none;
+}
+
+.suggestions::-webkit-scrollbar{
+  display:none;
+}
+
+.suggestion{
+  flex:0 0 auto;
+
+  border:1px solid #bbb;
+  background:#f7f7f7;
+
+  border-radius:999px;
+
+  padding:7px 10px;
+
+  font-size:13px;
+}
+
+
+/* =========================================================
+   LISTA
+   ========================================================= */
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+}
+
+.task{
+  display:flex;
+  align-items:center;
+
+  gap:9px;
+
+  background:#fff;
+
+  border:2px solid var(--ink);
+  border-radius:10px;
+
+  padding:10px;
+
+  min-height:52px;
+
+  user-select:none;
+
+  touch-action:pan-y;
+
+  position:relative;
+
+  transition:
+    opacity .12s,
+    transform .12s;
+}
+
+.task.dragging{
+  opacity:.35;
+}
+
+.task.touch-dragging{
+  opacity:.35;
+  transform:scale(.98);
+}
+
+.task.drop-target{
+  border-style:dashed;
+}
+
+
+/* =========================================================
+   HANDLE DE DRAG
+   ========================================================= */
+
+.dragHandle{
+  width:20px;
+  height:32px;
+
+  flex:0 0 20px;
+
+  display:grid;
+  place-items:center;
+
+  color:#777;
+
+  font-size:18px;
+  font-weight:900;
+
+  cursor:grab;
+
+  touch-action:none;
+
+  border-radius:6px;
+
+  user-select:none;
+}
+
+.dragHandle:active{
+  cursor:grabbing;
+  background:#eee;
+}
+
+
+/* =========================================================
+   CHECKBOX
+   ========================================================= */
+
+.check{
+  width:24px;
+  height:24px;
+
+  flex:0 0 24px;
+
+  border:2px solid #111;
+  border-radius:5px;
+
+  background:#fff;
+
+  display:grid;
+  place-items:center;
+
+  font-size:18px;
+  font-weight:900;
+}
+
+.task.done .check{
+  background:#111;
+  color:#fff;
+}
+
+
+/* =========================================================
+   TEXTO
+   ========================================================= */
+
+.taskText{
+  font-size:20px;
+  font-weight:800;
+
+  line-height:1.15;
+
+  flex:1;
+
+  min-width:0;
+
+  word-break:break-word;
+
+  display:flex;
+  align-items:center;
+
+  gap:8px;
+}
+
+.taskLabel{
+  min-width:0;
+}
+
+.taskIcon{
+  flex:0 0 auto;
+  font-size:21px;
+  line-height:1;
+}
+
+.task.done .taskText{
+  text-decoration:line-through;
+  color:#888;
+}
+
+.task.done{
+  opacity:.65;
+}
+
+
+/* =========================================================
+   MENU DA TAREFA
+   ========================================================= */
+
+.taskMenu{
+  width:30px;
+  height:32px;
+
+  flex:0 0 30px;
+
+  border:0;
+  background:transparent;
+
+  color:#555;
+
+  display:grid;
+  place-items:center;
+
+  font-size:22px;
+  font-weight:900;
+
+  border-radius:6px;
+
+  padding:0;
+}
+
+.taskMenu:active{
+  background:#eee;
+}
+
+
+/* =========================================================
+   OUTROS
+   ========================================================= */
+
+.hint{
+  text-align:center;
+  color:#777;
+  font-size:12px;
+  margin:10px 0;
+}
+
+.empty{
+  padding:30px 15px;
+
+  text-align:center;
+
+  border:2px dashed #aaa;
+  border-radius:12px;
+
+  color:#777;
+
+  background:#fff;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.modalBackdrop{
+  display:none;
+
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,.45);
+
+  z-index:20;
+
+  align-items:center;
+  justify-content:center;
+
+  padding:16px;
+
+  overflow-y:auto;
+}
+
+.modalBackdrop.open{
+  display:flex;
+}
+
+.modal{
+  background:#fff;
+
+  width:min(760px,100%);
+
+  border:2px solid #111;
+  border-radius:18px;
+
+  padding:18px;
+
+  max-height:calc(100vh - 32px);
+  min-height:340px;
+
+  overflow-y:auto;
+
+  box-shadow:0 8px 30px rgba(0,0,0,.25);
+
+  flex:0 1 auto;
+}
+
+.modal h2{
+  margin:0 0 7px;
+  font-size:20px;
+}
+
+.modal p{
+  margin:0 0 15px;
+
+  color:#555;
+
+  word-break:break-word;
+}
+
+.modalBtns{
+  display:grid;
+
+  grid-template-columns:1fr 1fr;
+
+  gap:8px;
+}
+
+.modalBtns button{
+  padding:13px;
+
+  border-radius:10px;
+
+  border:2px solid #111;
+
+  background:#fff;
+
+  font-weight:800;
+}
+
+.modalBtns .danger{
+  background:#111;
+  color:#fff;
+}
+
+.modalBtns .cancel{
+  grid-column:1/-1;
+}
+
+
+/* =========================================================
+   FORM DE EDIÇÃO
+   ========================================================= */
+
+.editForm{
+  display:flex;
+  flex-direction:column;
+
+  gap:10px;
+
+  margin-bottom:15px;
+
+  width:100%;
+}
+
+.editField{
+  width:100%;
+  min-height:46px;
+
+  border:2px solid #aaa;
+  border-radius:10px;
+
+  padding:11px 12px;
+
+  outline:none;
+
+  background:#fff;
+}
+
+.editField:focus{
+  border-color:#111;
+}
+
+
+/* =========================================================
+   TOAST
+   ========================================================= */
+
+#toast{
+  position:fixed;
+
+  left:50%;
+  bottom:20px;
+
+  transform:
+    translateX(-50%)
+    translateY(20px);
+
+  background:#111;
+  color:#fff;
+
+  padding:10px 14px;
+
+  border-radius:999px;
+
+  font-size:13px;
+
+  opacity:0;
+
+  pointer-events:none;
+
+  transition:.2s;
+
+  z-index:30;
+}
+
+#toast.show{
+  opacity:1;
+
+  transform:
+    translateX(-50%)
+    translateY(0);
+}
+
+
+/* =========================================================
+   MODO IMPRESSÃO — TELA
+   ========================================================= */
+
+body.print-mode{
+  background:#fff;
+}
+
+body.print-mode .app{
+  max-width:760px;
+
+  padding:10px 12px 20px;
+}
+
+body.print-mode header{
+  justify-content:center;
+
+  text-align:center;
+
+  margin-bottom:10px;
+}
+
+body.print-mode .sub,
+body.print-mode .actions,
+body.print-mode .editor,
+body.print-mode .hint,
+body.print-mode #empty{
+  display:none!important;
+}
+
+body.print-mode h1{
+  font-size:25px;
+
+  border-bottom:4px solid #111;
+
+  padding-bottom:6px;
+}
+
+body.print-mode .list{
+  gap:0;
+}
+
+body.print-mode .task{
+  border:0;
+
+  border-bottom:4px solid #111;
+
+  border-radius:0;
+
+  padding:10px 0;
+
+  min-height:0;
+
+  background:#fff;
+}
+
+body.print-mode .task:first-child{
+  border-top:4px solid #111;
+}
+
+body.print-mode .dragHandle,
+body.print-mode .taskMenu{
+  display:none;
+}
+
+
+/*
+ * ---------------------------------------------------------
+ * ESPAÇO PARA ESCREVER
+ *
+ * O aumento ocorre SOMENTE quando o checkbox foi marcado.
+ *
+ * align-items:flex-start mantém o conteúdo no topo.
+ * ---------------------------------------------------------
+ */
+
+body.print-mode.write-space .task{
+  min-height:104px;
+  align-items:flex-start;
+}
+
+body.print-mode.write-space .taskText{
+  align-items:flex-start;
+}
+
+body.print-mode.write-space .check{
+  top:14px;
+  transform:none;
+}
+
+
+/* =========================================================
+   TEXTO NO MODO IMPRESSÃO
+   ========================================================= */
+
+body.print-mode .taskText{
+  font-size:28px;
+
+  line-height:1.12;
+
+  font-weight:900;
+
+  display:flex;
+
+  align-items:center;
+
+  gap:10px;
+
+  padding-right:40px;
+}
+
+body.print-mode .taskIcon{
+  order:1;
+
+  flex:0 0 auto;
+
+  font-size:29px;
+
+  line-height:1;
+}
+
+body.print-mode .taskLabel{
+  order:0;
+
+  flex:1;
+}
+
+body.print-mode .check{
+  display:grid;
+
+  position:absolute;
+
+  left:0;
+
+  top:50%;
+
+  transform:translateY(-50%);
+
+  width:29px;
+  height:29px;
+
+  border:3px solid #111;
+
+  border-radius:4px;
+
+  background:#fff;
+
+  color:#111;
+
+  font-size:20px;
+}
+
+body.print-mode .taskText{
+  padding-left:40px;
+}
+
+body.print-mode .task.done .taskText{
+  color:#111;
+
+  text-decoration:line-through;
+}
+
+body.print-mode #printModeBtn{
+  display:block;
+
+  position:fixed;
+
+  right:12px;
+  top:10px;
+
+  z-index:10;
+}
+
+
+/* =========================================================
+   IMPRESSÃO TÉRMICA — 58mm
+   ========================================================= */
+
+@media print{
+
+  @page{
+    size:58mm auto;
+    margin:0;
+  }
+
+  html,
+  body{
+    background:#fff!important;
+
+    width:58mm;
+  }
+
+  body{
+    margin:0!important;
+    padding:0!important;
+  }
+
+  .app{
+    width:58mm;
+
+    max-width:none;
+
+    margin:0;
+
+    padding:
+      2.5mm
+      2.5mm
+      4mm;
+  }
+
+  header{
+    display:block;
+
+    text-align:center;
+
+    margin:0 0 2.5mm;
+  }
+
+  h1{
+    font-size:25px;
+    line-height:1.05;
+  }
+
+  .sub,
+  .actions,
+  .editor,
+  .hint,
+  .dragHandle,
+  .taskMenu,
+  #empty,
+  #toast{
+    display:none!important;
+  }
+
+  .list{
+    display:block;
+  }
+
+  .task{
+    display:block;
+
+    border:0;
+
+    border-bottom:2px solid #111;
+
+    border-radius:0;
+
+    padding:2.5mm 0;
+
+    min-height:0;
+
+    background:#fff;
+
+    position:relative;
+  }
+
+  .task:first-child{
+    border-top:3px solid #111;
+  }
+
+
+  /*
+   * Espaço normal
+   */
+
+  .taskText{
+    display:flex;
+
+    align-items:center;
+
+    gap:7px;
+
+    font-size:24px;
+
+    line-height:1.12;
+
+    font-weight:900;
+
+    padding-left:34px;
+    padding-right:34px;
+  }
+
+
+  /*
+   * Espaço para escrever.
+   *
+   * O checkbox NÃO está sendo escondido aqui.
+   * Ele já foi removido pelo .actions quando
+   * body.print-mode está ativo.
+   *
+   * A altura e alinhamento são controlados pela
+   * classe write-space.
+   */
+
+  body.write-space .task{
+    min-height:104px;
+  }
+
+  body.write-space .taskText{
+    align-items:flex-start;
+  }
+
+
+  .taskIcon{
+    flex:0 0 auto;
+
+    font-size:25px;
+  }
+
+  .taskLabel{
+    flex:1;
+  }
+
+  .check{
+    display:grid;
+
+    position:absolute;
+
+    left:0;
+
+    top:50%;
+
+    transform:translateY(-50%);
+
+    width:25px;
+    height:25px;
+
+    border:3px solid #111;
+
+    border-radius:3px;
+
+    background:#fff;
+
+    color:#111;
+
+    font-size:17px;
+  }
+
+
+  /*
+   * No modo espaço para escrever,
+   * o checkbox fica no topo.
+   */
+
+  body.write-space .check{
+    top:2.5mm;
+
+    transform:none;
+  }
+
+  .task.done{
+    opacity:1;
+  }
+
+  .task.done .taskText{
+    color:#111;
+
+    text-decoration:line-through;
+  }
+
+}
+
+
+/* =========================================================
+   TELAS PEQUENAS
+   ========================================================= */
+
+@media (max-width:600px){
+
+  .actions{
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+
+  .writeSpaceOption{
+    font-size:12px;
+    padding:7px 8px;
+  }
+
+  .modalBackdrop{
+    padding:10px;
+  }
+
+  .modal{
+    width:100%;
+
+    max-height:
+      calc(100vh - 20px);
+
+    padding:16px;
+
+    border-radius:16px;
+  }
+
+  .modalBtns{
+    grid-template-columns:1fr;
+  }
+
+  .modalBtns button{
+    width:100%;
+    min-height:46px;
+  }
+
+  .modalBtns .cancel{
+    grid-column:auto;
+  }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="app">
+
+  <header>
+
+    <div>
+
+      <h1>📋 TAREFAS</h1>
+
+      <div class="sub">
+        Toque para concluir · arraste ⋮⋮ para ordenar · ⋮ para opções
+      </div>
+
+    </div>
+
+
+    <div class="actions">
+
+      <!--
+        Este controle existe SOMENTE no modo normal.
+        Quando print-mode é ativado, .actions inteiro
+        desaparece antes da impressão.
+      -->
+
+      <label
+        class="writeSpaceOption"
+        id="writeSpaceOption"
+      >
+
+        <input
+          type="checkbox"
+          id="writeSpaceCheckbox"
+        >
+
+        <span>
+          Espaço para escrever
+        </span>
+
+      </label>
+
+
+      <button
+        class="btn"
+        id="clearDoneBtn"
+      >
+        Limpar
+      </button>
+
+
+      <button
+        class="btn dark"
+        id="printModeBtn"
+      >
+        🖨️ Modo impressão
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <section class="editor">
+
+    <div class="addrow">
+
+      <input
+        id="taskInput"
+        list="templateList"
+        autocomplete="off"
+        placeholder="Nova tarefa..."
+        aria-label="Nova tarefa"
+      >
+
+
+      <button
+        class="btn dark"
+        id="addBtn"
+      >
+        ＋
+      </button>
+
+    </div>
+
+
+    <div
+      class="suggestions"
+      id="suggestions"
+    ></div>
+
+
+    <datalist
+      id="templateList"
+    ></datalist>
+
+  </section>
+
+
+  <main
+    id="list"
+    class="list"
+  ></main>
+
+
+  <div
+    id="empty"
+    class="empty"
+    style="display:none"
+  >
+    Nenhuma tarefa ainda.
+    <br>
+    Digite uma tarefa acima.
+  </div>
+
+
+  <div class="hint">
+    💡 Use ⋮⋮ para arrastar e ordenar.
+  </div>
+
+</div>
+
+
+<!-- =======================================================
+     MODAL
+     ======================================================= -->
+
+<div
+  class="modalBackdrop"
+  id="modalBackdrop"
+>
+
+  <div
+    class="modal"
+    role="dialog"
+    aria-modal="true"
+  >
+
+    <h2 id="modalTitle">
+      Opções
+    </h2>
+
+
+    <p id="modalTask"></p>
+
+
+    <div
+      class="modalBtns"
+      id="modalButtons"
+    ></div>
+
+  </div>
+
+</div>
+
+
+<div id="toast"></div>
+
+
+<script>
+
+(() => {
+
+  const STORAGE_KEY =
+    "tarefas-termica-v2";
+
+
+  /*
+   * ======================================================
+   * TEMPLATES
+   * ======================================================
+   */
+
+  const TEMPLATES = [
+
+    ["História", "📜"],
+    ["Matemática", "➗"],
+    ["Filosofia", "🏛️"],
+    ["Filosofia / QNS", "🧠"],
+    ["Filosofia / INEF / Aulas", "🎓"],
+    ["Sociologia", "👥"],
+    ["Geopolítica", "🌎"],
+    ["Atualidades", "📰"],
+    ["Política", "🏛️"],
+    ["Economia", "💰"],
+    ["Direito", "⚖️"],
+    ["Psicologia", "🧠"],
+    ["Literatura", "📚"],
+    ["Leitura", "📖"],
+    ["Escrita", "✍️"],
+    ["Inglês", "🇬🇧"],
+    ["Português", "🇧🇷"],
+    ["Trabalho", "💼"],
+    ["Projetos", "🛠️"],
+    ["Organização", "🗂️"],
+    ["Pesquisa", "🔎"],
+    ["Revisão", "🔁"],
+    ["Estudos", "📚"],
+
+    ["Álgebra", "➗"],
+    ["Geometria", "📐"],
+    ["Trigonometria", "📏"],
+    ["Funções", "📈"],
+    ["Probabilidade", "🎲"],
+    ["Estatística", "📊"],
+    ["Física", "⚛️"],
+    ["Química", "🧪"],
+    ["Biologia", "🧬"],
+    ["Redação", "✍️"],
+    ["Gramática", "📝"],
+    ["Interpretação de texto", "📖"],
+    ["Geografia", "🗺️"],
+    ["História do Brasil", "🇧🇷"],
+    ["História Geral", "🌍"],
+
+    ["Programação", "💻"],
+    ["Estruturas de Dados", "🌳"],
+    ["Algoritmos", "⚙️"],
+    ["Complexidade de Algoritmos", "📐"],
+    ["Banco de Dados", "🗄️"],
+    ["SQL", "🗃️"],
+    ["Engenharia de Software", "🧩"],
+    ["Sistemas Operacionais", "🖥️"],
+    ["Redes de Computadores", "🌐"],
+    ["Arquitetura de Computadores", "🖥️"],
+    ["Compiladores", "🧩"],
+    ["Linguagens de Programação", "💻"],
+    ["Teoria da Computação", "🧠"],
+    ["Autômatos e Linguagens", "🔤"],
+    ["Sistemas Distribuídos", "🔗"],
+    ["Computação em Nuvem", "☁️"],
+    ["Inteligência Artificial", "🤖"],
+    ["Machine Learning", "🤖"],
+    ["Ciência de Dados", "📊"],
+    ["Cálculo", "∫"],
+    ["Álgebra Linear", "📐"],
+    ["Matemática Discreta", "🔢"],
+    ["Lógica Matemática", "∧"],
+    ["Probabilidade e Estatística", "📊"],
+    ["Git / GitHub", "🐙"],
+    ["Linux", "🐧"],
+    ["Python", "🐍"],
+    ["JavaScript", "🟨"],
+    ["C / C++", "⚙️"],
+    ["Java", "☕"],
+    ["HTML / CSS", "🌐"],
+    ["APIs", "🔌"],
+    ["Desenvolvimento Web", "🌐"],
+    ["Segurança da Informação", "🔐"],
+    ["Criptografia", "🔒"],
+    ["Testes de Software", "🧪"],
+    ["Documentação", "📄"],
+    ["Projeto da Faculdade", "🎓"],
+    ["Trabalho da Faculdade", "🎓"],
+    ["TCC", "🎓"]
+
+  ];
+
+
+  /*
+   * ======================================================
+   * ESTADO
+   * ======================================================
+   */
+
+  let tasks = load();
+
+  let selectedId = null;
+
+  let dragId = null;
+
+
+  /*
+   * ======================================================
+   * ELEMENTOS
+   * ======================================================
+   */
+
+  const list =
+    document.getElementById("list");
+
+  const empty =
+    document.getElementById("empty");
+
+  const input =
+    document.getElementById("taskInput");
+
+  const suggestions =
+    document.getElementById("suggestions");
+
+  const datalist =
+    document.getElementById("templateList");
+
+  const backdrop =
+    document.getElementById("modalBackdrop");
+
+  const modalTitle =
+    document.getElementById("modalTitle");
+
+  const modalTask =
+    document.getElementById("modalTask");
+
+  const modalButtons =
+    document.getElementById("modalButtons");
+
+  const writeSpaceCheckbox =
+    document.getElementById("writeSpaceCheckbox");
+
+
+  /*
+   * ======================================================
+   * DATELIST
+   * ======================================================
+   */
+
+  TEMPLATES.forEach(
+    ([label, icon]) => {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        label;
+
+      datalist.appendChild(option);
+
+    }
+  );
+
+
+  /*
+   * ======================================================
+   * STORAGE
+   * ======================================================
+   */
+
+  function load(){
+
+    try{
+
+      const raw =
+        localStorage.getItem(STORAGE_KEY);
+
+      if(raw){
+
+        const parsed =
+          JSON.parse(raw);
+
+        if(Array.isArray(parsed)){
+
+          return parsed
+            .map(normalizeTask)
+            .filter(Boolean);
+
+        }
+
+      }
+
+
+      const oldRaw =
+        localStorage.getItem(
+          "tarefas-termica-v1"
+        );
+
+
+      if(oldRaw){
+
+        const oldTasks =
+          JSON.parse(oldRaw);
+
+
+        if(Array.isArray(oldTasks)){
+
+          return oldTasks
+            .map(oldTask => {
+
+              const parsed =
+                splitTrailingEmoji(
+                  oldTask.text || ""
+                );
+
+
+              return {
+
+                id:
+                  oldTask.id ||
+                  uid(),
+
+                label:
+                  parsed.label,
+
+                icon:
+                  parsed.emoji,
+
+                done:
+                  !!oldTask.done
+
+              };
+
+            });
+
+        }
+
+      }
+
+
+      return [];
+
+    }
+    catch{
+
+      return [];
+
+    }
+
+  }
+
+
+  function normalizeTask(task){
+
+    if(
+      !task ||
+      typeof task !== "object"
+    ){
+
+      return null;
+
+    }
+
+
+    if(
+      typeof task.label === "string"
+    ){
+
+      return {
+
+        id:
+          task.id ||
+          uid(),
+
+        label:
+          task.label.trim(),
+
+        icon:
+          typeof task.icon === "string"
+            ? task.icon
+            : "",
+
+        done:
+          !!task.done
+
+      };
+
+    }
+
+
+    if(
+      typeof task.text === "string"
+    ){
+
+      const parsed =
+        splitTrailingEmoji(
+          task.text
+        );
+
+
+      return {
+
+        id:
+          task.id ||
+          uid(),
+
+        label:
+          parsed.label,
+
+        icon:
+          parsed.emoji,
+
+        done:
+          !!task.done
+
+      };
+
+    }
+
+
+    return null;
+
+  }
+
+
+  function save(){
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(tasks)
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * ID
+   * ======================================================
+   */
+
+  function uid(){
+
+    return (
+      Date.now().toString(36) +
+      Math.random()
+        .toString(36)
+        .slice(2)
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * ADICIONAR
+   * ======================================================
+   */
+
+  function addTask(
+    label,
+    icon = ""
+  ){
+
+    label =
+      label.trim();
+
+
+    if(!label){
+
+      return;
+
+    }
+
+
+    if(!icon){
+
+      const parsed =
+        splitTrailingEmoji(label);
+
+
+      label =
+        parsed.label;
+
+      icon =
+        parsed.emoji;
+
+    }
+
+
+    tasks.push({
+
+      id:uid(),
+
+      label,
+
+      icon,
+
+      done:false
+
+    });
+
+
+    save();
+
+    render();
+
+    input.value = "";
+
+    input.focus();
+
+  }
+
+
+  /*
+   * ======================================================
+   * SUGESTÕES
+   * ======================================================
+   */
+
+  function renderSuggestions(){
+
+    const q =
+      input.value
+        .trim()
+        .toLowerCase();
+
+
+    const matches =
+      TEMPLATES
+        .filter(
+          ([label]) =>
+            !q ||
+            label
+              .toLowerCase()
+              .includes(q)
+        )
+        .slice(0,12);
+
+
+    suggestions.innerHTML = "";
+
+
+    matches.forEach(
+      ([label, icon]) => {
+
+        const button =
+          document.createElement("button");
+
+
+        button.className =
+          "suggestion";
+
+        button.type =
+          "button";
+
+
+        button.textContent =
+          `${label} ${icon}`;
+
+
+        button.onclick =
+          () => {
+
+            addTask(
+              label,
+              icon
+            );
+
+          };
+
+
+        suggestions.appendChild(button);
+
+      }
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * RENDER
+   * ======================================================
+   */
+
+  function render(){
+
+    list.innerHTML = "";
+
+
+    empty.style.display =
+      tasks.length
+        ? "none"
+        : "block";
+
+
+    tasks.forEach(
+      task => {
+
+        const el =
+          document.createElement("div");
+
+
+        el.className =
+          "task" +
+          (
+            task.done
+              ? " done"
+              : ""
+          );
+
+
+        el.dataset.id =
+          task.id;
+
+
+        const dragHandle =
+          document.createElement("span");
+
+
+        dragHandle.className =
+          "dragHandle";
+
+        dragHandle.textContent =
+          "⋮⋮";
+
+        dragHandle.title =
+          "Arrastar para ordenar";
+
+
+        const check =
+          document.createElement("button");
+
+
+        check.className =
+          "check";
+
+        check.type =
+          "button";
+
+
+        check.textContent =
+          task.done
+            ? "✓"
+            : "";
+
+
+        check.setAttribute(
+          "aria-label",
+          task.done
+            ? "Desmarcar"
+            : "Concluir"
+        );
+
+
+        check.onclick =
+          event => {
+
+            event.stopPropagation();
+
+            toggleTask(task.id);
+
+          };
+
+
+        const text =
+          document.createElement("div");
+
+
+        text.className =
+          "taskText";
+
+
+        const label =
+          document.createElement("span");
+
+
+        label.className =
+          "taskLabel";
+
+        label.textContent =
+          task.label;
+
+
+        const icon =
+          document.createElement("span");
+
+
+        icon.className =
+          "taskIcon";
+
+        icon.textContent =
+          task.icon;
+
+
+        text.append(
+          label,
+          icon
+        );
+
+
+        const menu =
+          document.createElement("button");
+
+
+        menu.className =
+          "taskMenu";
+
+        menu.type =
+          "button";
+
+        menu.textContent =
+          "⋮";
+
+        menu.title =
+          "Opções";
+
+
+        menu.onclick =
+          event => {
+
+            event.stopPropagation();
+
+            openTaskMenu(task.id);
+
+          };
+
+
+        el.append(
+          dragHandle,
+          check,
+          text,
+          menu
+        );
+
+
+        el.addEventListener(
+          "click",
+          () => {
+
+            toggleTask(task.id);
+
+          }
+        );
+
+
+        /*
+         * ==================================================
+         * DRAG DESKTOP
+         * ==================================================
+         */
+
+        el.draggable = false;
+
+
+        dragHandle.addEventListener(
+          "mousedown",
+          () => {
+
+            el.draggable = true;
+
+          }
+        );
+
+
+        el.addEventListener(
+          "dragstart",
+          event => {
+
+            dragId = task.id;
+
+            el.classList.add("dragging");
+
+
+            if(event.dataTransfer){
+
+              event.dataTransfer.effectAllowed =
+                "move";
+
+
+              event.dataTransfer.setData(
+                "text/plain",
+                task.id
+              );
+
+            }
+
+          }
+        );
+
+
+        el.addEventListener(
+          "dragend",
+          () => {
+
+            dragId = null;
+
+            el.classList.remove("dragging");
+
+
+            document
+              .querySelectorAll(".task")
+              .forEach(
+                item =>
+                  item.classList.remove(
+                    "drop-target"
+                  )
+              );
+
+          }
+        );
+
+
+        el.addEventListener(
+          "dragover",
+          event => {
+
+            event.preventDefault();
+
+
+            if(
+              dragId &&
+              dragId !== task.id
+            ){
+
+              el.classList.add(
+                "drop-target"
+              );
+
+            }
+
+          }
+        );
+
+
+        el.addEventListener(
+          "dragleave",
+          () => {
+
+            el.classList.remove(
+              "drop-target"
+            );
+
+          }
+        );
+
+
+        el.addEventListener(
+          "drop",
+          event => {
+
+            event.preventDefault();
+
+            el.classList.remove(
+              "drop-target"
+            );
+
+
+            const fromId =
+              dragId ||
+              event.dataTransfer?.getData(
+                "text/plain"
+              );
+
+
+            moveTask(
+              fromId,
+              task.id
+            );
+
+          }
+        );
+
+
+        /*
+         * ==================================================
+         * DRAG TOUCH
+         * ==================================================
+         */
+
+        dragHandle.addEventListener(
+          "touchstart",
+          event => {
+
+            if(
+              event.touches.length !== 1
+            ){
+
+              return;
+
+            }
+
+
+            startTouchDrag(
+              event,
+              el,
+              task.id
+            );
+
+          },
+          {
+            passive:false
+          }
+        );
+
+
+        list.appendChild(el);
+
+      }
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * TOUCH DRAG
+   * ======================================================
+   */
+
+  function startTouchDrag(
+    event,
+    element,
+    taskId
+  ){
+
+    event.preventDefault();
+
+
+    let currentElement =
+      element;
+
+
+    dragId =
+      taskId;
+
+
+    element.classList.add(
+      "touch-dragging"
+    );
+
+
+    function onMove(moveEvent){
+
+      moveEvent.preventDefault();
+
+
+      const touch =
+        moveEvent.touches[0];
+
+
+      const target =
+        document
+          .elementsFromPoint(
+            touch.clientX,
+            touch.clientY
+          )
+          .find(
+            item =>
+              item.classList &&
+              item.classList.contains("task") &&
+              item !== element
+          );
+
+
+      document
+        .querySelectorAll(".task")
+        .forEach(
+          item =>
+            item.classList.remove(
+              "drop-target"
+            )
+        );
+
+
+      if(target){
+
+        target.classList.add(
+          "drop-target"
+        );
+
+
+        currentElement =
+          target;
+
+      }
+
+    }
+
+
+    function onEnd(){
+
+      document.removeEventListener(
+        "touchmove",
+        onMove
+      );
+
+
+      document.removeEventListener(
+        "touchend",
+        onEnd
+      );
+
+
+      element.classList.remove(
+        "touch-dragging"
+      );
+
+
+      document
+        .querySelectorAll(".task")
+        .forEach(
+          item =>
+            item.classList.remove(
+              "drop-target"
+            )
+        );
+
+
+      if(
+        currentElement &&
+        currentElement !== element
+      ){
+
+        moveTask(
+          taskId,
+          currentElement.dataset.id
+        );
+
+      }
+
+
+      dragId = null;
+
+    }
+
+
+    document.addEventListener(
+      "touchmove",
+      onMove,
+      {
+        passive:false
+      }
+    );
+
+
+    document.addEventListener(
+      "touchend",
+      onEnd,
+      {
+        passive:false
+      }
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * MOVER TAREFA
+   * ======================================================
+   */
+
+  function moveTask(
+    fromId,
+    toId
+  ){
+
+    if(
+      !fromId ||
+      !toId ||
+      fromId === toId
+    ){
+
+      return;
+
+    }
+
+
+    const from =
+      tasks.findIndex(
+        task =>
+          task.id === fromId
+      );
+
+
+    const to =
+      tasks.findIndex(
+        task =>
+          task.id === toId
+      );
+
+
+    if(
+      from < 0 ||
+      to < 0
+    ){
+
+      return;
+
+    }
+
+
+    const [item] =
+      tasks.splice(
+        from,
+        1
+      );
+
+
+    tasks.splice(
+      to,
+      0,
+      item
+    );
+
+
+    save();
+
+    render();
+
+  }
+
+
+  /*
+   * ======================================================
+   * CONCLUIR
+   * ======================================================
+   */
+
+  function toggleTask(id){
+
+    const task =
+      tasks.find(
+        item =>
+          item.id === id
+      );
+
+
+    if(!task){
+
+      return;
+
+    }
+
+
+    task.done =
+      !task.done;
+
+
+    save();
+
+    render();
+
+  }
+
+
+  /*
+   * ======================================================
+   * FORMATA TAREFA
+   * ======================================================
+   */
+
+  function formatTask(task){
+
+    if(!task){
+
+      return "";
+
+    }
+
+
+    return (
+      task.label +
+      (
+        task.icon
+          ? " " + task.icon
+          : ""
+      )
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * MENU DE OPÇÕES DA TAREFA
+   * ======================================================
+   */
+
+  function openTaskMenu(id){
+
+    const task =
+      tasks.find(
+        item =>
+          item.id === id
+      );
+
+
+    if(!task){
+
+      return;
+
+    }
+
+
+    selectedId =
+      id;
+
+
+    openModal(
+      "Opções da tarefa",
+      formatTask(task),
+      [
+
+        {
+          label:"✏️ Editar",
+          action:openEditTask
+        },
+
+        {
+          label:"⧉ Duplicar",
+          action:duplicateTask
+        },
+
+        {
+          label:"🗑️ Excluir",
+          danger:true,
+          action:deleteTask
+        },
+
+        {
+          label:"Cancelar",
+          cancel:true,
+          action:closeModal
+        }
+
+      ]
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * EDITAR TAREFA
+   * ======================================================
+   */
+
+  function openEditTask(){
+
+    const task =
+      tasks.find(
+        item =>
+          item.id === selectedId
+      );
+
+
+    if(!task){
+
+      closeModal();
+
+      return;
+
+    }
+
+
+    modalTitle.textContent =
+      "Editar tarefa";
+
+
+    modalTask.innerHTML =
+      "";
+
+
+    const form =
+      document.createElement("div");
+
+
+    form.className =
+      "editForm";
+
+
+    const labelInput =
+      document.createElement("input");
+
+
+    labelInput.type =
+      "text";
+
+    labelInput.className =
+      "editField";
+
+    labelInput.placeholder =
+      "Texto da tarefa";
+
+    labelInput.value =
+      task.label;
+
+
+    const iconInput =
+      document.createElement("input");
+
+
+    iconInput.type =
+      "text";
+
+    iconInput.className =
+      "editField";
+
+    iconInput.placeholder =
+      "Emoji / ícone";
+
+    iconInput.value =
+      task.icon;
+
+
+    form.append(
+      labelInput,
+      iconInput
+    );
+
+
+    modalTask.appendChild(
+      form
+    );
+
+
+    modalButtons.innerHTML =
+      "";
+
+
+    const saveButton =
+      document.createElement("button");
+
+
+    saveButton.type =
+      "button";
+
+    saveButton.textContent =
+      "💾 Salvar";
+
+    saveButton.classList.add(
+      "danger"
+    );
+
+
+    saveButton.onclick =
+      () => {
+
+        const label =
+          labelInput.value.trim();
+
+        const icon =
+          iconInput.value.trim();
+
+
+        if(!label){
+
+          labelInput.focus();
+
+          return;
+
+        }
+
+
+        task.label =
+          label;
+
+        task.icon =
+          icon;
+
+
+        save();
+
+        closeModal();
+
+        render();
+
+        toast(
+          "Tarefa alterada"
+        );
+
+      };
+
+
+    const cancelButton =
+      document.createElement("button");
+
+
+    cancelButton.type =
+      "button";
+
+    cancelButton.textContent =
+      "Cancelar";
+
+    cancelButton.classList.add(
+      "cancel"
+    );
+
+    cancelButton.onclick =
+      closeModal;
+
+
+    modalButtons.append(
+      saveButton,
+      cancelButton
+    );
+
+
+    requestAnimationFrame(
+      () => {
+
+        labelInput.focus();
+
+        labelInput.select();
+
+      }
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * DUPLICAR
+   * ======================================================
+   */
+
+  function duplicateTask(){
+
+    const task =
+      tasks.find(
+        item =>
+          item.id === selectedId
+      );
+
+
+    if(!task){
+
+      return;
+
+    }
+
+
+    const index =
+      tasks.findIndex(
+        item =>
+          item.id === selectedId
+      );
+
+
+    tasks.splice(
+      index + 1,
+      0,
+      {
+
+        id:uid(),
+
+        label:
+          task.label,
+
+        icon:
+          task.icon,
+
+        done:false
+
+      }
+    );
+
+
+    save();
+
+    closeModal();
+
+    render();
+
+    toast(
+      "Tarefa duplicada"
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * EXCLUIR
+   * ======================================================
+   */
+
+  function deleteTask(){
+
+    tasks =
+      tasks.filter(
+        task =>
+          task.id !== selectedId
+      );
+
+
+    save();
+
+    closeModal();
+
+    render();
+
+    toast(
+      "Tarefa excluída"
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * MODAL
+   * ======================================================
+   */
+
+  function openModal(
+    title,
+    message,
+    buttons
+  ){
+
+    modalTitle.textContent =
+      title;
+
+
+    modalTask.textContent =
+      message;
+
+
+    modalButtons.innerHTML =
+      "";
+
+
+    buttons.forEach(
+      config => {
+
+        const button =
+          document.createElement("button");
+
+
+        button.type =
+          "button";
+
+
+        button.textContent =
+          config.label;
+
+
+        if(config.danger){
+
+          button.classList.add(
+            "danger"
+          );
+
+        }
+
+
+        if(config.cancel){
+
+          button.classList.add(
+            "cancel"
+          );
+
+        }
+
+
+        button.onclick =
+          () => {
+
+            config.action();
+
+          };
+
+
+        modalButtons.appendChild(
+          button
+        );
+
+      }
+    );
+
+
+    backdrop.classList.add(
+      "open"
+    );
+
+  }
+
+
+  function closeModal(){
+
+    backdrop.classList.remove(
+      "open"
+    );
+
+
+    selectedId =
+      null;
+
+  }
+
+
+  backdrop.addEventListener(
+    "click",
+    event => {
+
+      if(
+        event.target === backdrop
+      ){
+
+        closeModal();
+
+      }
+
+    }
+  );
+
+
+  /*
+   * ======================================================
+   * MENU LIMPAR
+   * ======================================================
+   */
+
+  document
+    .getElementById("clearDoneBtn")
+    .onclick =
+      () => {
+
+        openModal(
+          "Limpar tarefas",
+          "Escolha uma opção:",
+          [
+
+            {
+              label:"🗑️ Limpar tudo",
+              danger:true,
+              action:clearAllTasks
+            },
+
+            {
+              label:"✓ Limpar concluídas",
+              action:clearCompleted
+            },
+
+            {
+              label:"↩️ Marcar todas como não concluídas",
+              action:uncompleteAll
+            },
+
+            {
+              label:"Cancelar",
+              cancel:true,
+              action:closeModal
+            }
+
+          ]
+        );
+
+      };
+
+
+  /*
+   * ======================================================
+   * LIMPAR TUDO
+   * ======================================================
+   */
+
+  function clearAllTasks(){
+
+    tasks = [];
+
+    save();
+
+    closeModal();
+
+    render();
+
+    toast(
+      "Todas as tarefas foram removidas"
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * LIMPAR CONCLUÍDAS
+   * ======================================================
+   */
+
+  function clearCompleted(){
+
+    const originalLength =
+      tasks.length;
+
+
+    tasks =
+      tasks.filter(
+        task =>
+          !task.done
+      );
+
+
+    if(
+      tasks.length !==
+      originalLength
+    ){
+
+      save();
+
+      render();
+
+      toast(
+        "Tarefas concluídas removidas"
+      );
+
+    }
+    else{
+
+      toast(
+        "Nenhuma tarefa concluída"
+      );
+
+    }
+
+
+    closeModal();
+
+  }
+
+
+  /*
+   * ======================================================
+   * DESMARCAR TODAS
+   * ======================================================
+   */
+
+  function uncompleteAll(){
+
+    let changed =
+      false;
+
+
+    tasks.forEach(
+      task => {
+
+        if(task.done){
+
+          task.done =
+            false;
+
+          changed =
+            true;
+
+        }
+
+      }
+    );
+
+
+    if(changed){
+
+      save();
+
+      render();
+
+      toast(
+        "Todas as tarefas foram desmarcadas"
+      );
+
+    }
+    else{
+
+      toast(
+        "Nenhuma tarefa estava concluída"
+      );
+
+    }
+
+
+    closeModal();
+
+  }
+
+
+  /*
+   * ======================================================
+   * ADICIONAR
+   * ======================================================
+   */
+
+  document
+    .getElementById("addBtn")
+    .onclick =
+      () => {
+
+        const value =
+          input.value.trim();
+
+
+        if(!value){
+
+          return;
+
+        }
+
+
+        const template =
+          TEMPLATES.find(
+            ([label]) =>
+              label.toLowerCase() ===
+              value.toLowerCase()
+          );
+
+
+        if(template){
+
+          addTask(
+            template[0],
+            template[1]
+          );
+
+          return;
+
+        }
+
+
+        addTask(value);
+
+      };
+
+
+  input.addEventListener(
+    "keydown",
+    event => {
+
+      if(
+        event.key === "Enter"
+      ){
+
+        document
+          .getElementById("addBtn")
+          .click();
+
+      }
+
+    }
+  );
+
+
+  input.addEventListener(
+    "input",
+    renderSuggestions
+  );
+
+
+  /*
+   * ======================================================
+   * EXTRAI EMOJI DO FINAL
+   * ======================================================
+   */
+
+  function splitTrailingEmoji(value){
+
+    const s =
+      value.trim();
+
+
+    if(!s){
+
+      return {
+        label:"",
+        emoji:""
+      };
+
+    }
+
+
+    const m =
+      s.match(
+        /(\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F|\p{Emoji_Modifier})?)*)$/u
+      );
+
+
+    if(!m){
+
+      return {
+        label:s,
+        emoji:""
+      };
+
+    }
+
+
+    return {
+
+      label:
+        s
+          .slice(0,m.index)
+          .trim(),
+
+      emoji:
+        m[1]
+
+    };
+
+  }
+
+
+  /*
+   * ======================================================
+   * ESPAÇO PARA ESCREVER
+   * ======================================================
+   *
+   * IMPORTANTE:
+   *
+   * O checkbox é controlado ANTES de entrar no
+   * modo de impressão.
+   *
+   * Ao marcar:
+   *
+   * body.write-space
+   *
+   * Ao desmarcar:
+   *
+   * body sem write-space
+   *
+   * Quando print-mode entra, .actions desaparece.
+   * Portanto o checkbox nunca faz parte da impressão.
+   *
+   * ======================================================
+   */
+
+  writeSpaceCheckbox.addEventListener(
+    "change",
+    () => {
+
+      document.body.classList.toggle(
+        "write-space",
+        writeSpaceCheckbox.checked
+      );
+
+    }
+  );
+
+
+  /*
+   * ======================================================
+   * MODO IMPRESSÃO
+   * ======================================================
+   */
+
+  const printModeBtn =
+    document.getElementById(
+      "printModeBtn"
+    );
+
+
+  printModeBtn.onclick =
+    () => {
+
+      const active =
+        document.body.classList.toggle(
+          "print-mode"
+        );
+
+
+      printModeBtn.textContent =
+        active
+          ? "↩️ Voltar"
+          : "🖨️ Modo impressão";
+
+
+      window.scrollTo({
+        top:0,
+        behavior:"smooth"
+      });
+
+    };
+
+
+  /*
+   * ======================================================
+   * TOAST
+   * ======================================================
+   */
+
+  function toast(message){
+
+    const element =
+      document.getElementById("toast");
+
+
+    element.textContent =
+      message;
+
+
+    element.classList.add(
+      "show"
+    );
+
+
+    setTimeout(
+      () => {
+
+        element.classList.remove(
+          "show"
+        );
+
+      },
+      1300
+    );
+
+  }
+
+
+  /*
+   * ======================================================
+   * INICIALIZAÇÃO
+   * ======================================================
+   */
+
+  renderSuggestions();
+
+  render();
+
+})();
+
+</script>
+
+</body>
+</html>

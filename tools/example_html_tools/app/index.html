@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Calendário</title>
+
+    <style>
+
+        /* #include css/style.css */
+
+    </style>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+     <!-- <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23000'/><path d='M8 8h16v16H8z' fill='%23fff'/></svg>"> -->
+
+</head>
+
+<body>
+
+    <main class="config">
+
+        <h1>📅 Calendário</h1>
+
+        <label>
+            Ano
+
+            <input
+                id="ano"
+                type="number"
+                min="1900"
+                max="2100"
+            >
+        </label>
+
+        <label class="checkbox">
+
+            <input
+                id="feriados"
+                type="checkbox"
+                checked
+            >
+
+            Mostrar feriados
+
+        </label>
+
+        <button id="gerar">
+            Gerar calendário
+        </button>
+
+    </main>
+
+
+    <div id="status"></div>
+
+    <div id="erro"></div>
+
+    <main id="resultado"></main>
+
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+
+    <script>
+
+        // #include js/app.js
+
+    </script>
+
+</body>
+
+</html>

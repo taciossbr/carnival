@@ -1,0 +1,1937 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>📅 CALENDÁRIO MENSAL</title>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+
+
+    <style>
+
+        /* =========================================================
+           BASE
+           ========================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            padding: 20px;
+
+            font:
+                16px
+                "Helvetica Neue",
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #f2f2f2;
+
+            color: #000;
+
+        }
+
+
+        /* =========================================================
+           CONFIGURAÇÃO
+           ========================================================= */
+
+        .config {
+
+            width: 100%;
+
+            max-width: 500px;
+
+            margin: 0 auto;
+
+            background: #fff;
+
+            border: 3px solid #000;
+
+            padding: 20px;
+
+        }
+
+
+        .config h1 {
+
+            margin: 0 0 20px 0;
+
+            font-size: 24px;
+
+            text-align: center;
+
+            border-bottom: 4px solid #000;
+
+            padding-bottom: 10px;
+
+        }
+
+
+        .campo {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .campo label {
+
+            display: block;
+
+            font-weight: bold;
+
+            margin-bottom: 6px;
+
+        }
+
+
+        .campo input {
+
+            width: 100%;
+
+            padding: 10px;
+
+            border: 2px solid #000;
+
+            background: #fff;
+
+            color: #000;
+
+            font-size: 18px;
+
+        }
+
+
+        .ajuda {
+
+            margin-top: 5px;
+
+            font-size: 12px;
+
+            color: #555;
+
+        }
+
+
+        #gerar {
+
+            width: 100%;
+
+            border: 0;
+
+            background: #000;
+
+            color: #fff;
+
+            padding: 14px;
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        #gerar:hover {
+
+            opacity: .8;
+
+        }
+
+
+        #gerar:disabled {
+
+            opacity: .5;
+
+            cursor: wait;
+
+        }
+
+
+        /* =========================================================
+           STATUS
+           ========================================================= */
+
+        #status {
+
+            margin-top: 15px;
+
+            font-family: monospace;
+
+            font-size: 13px;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           ERRO
+           ========================================================= */
+
+        #erro {
+
+            display: none;
+
+            max-width: 900px;
+
+            margin: 20px auto;
+
+            padding: 15px;
+
+            border: 3px solid #900;
+
+            color: #900;
+
+            background: #fff;
+
+            font-family: monospace;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           RESULTADO
+           ========================================================= */
+
+        #resultado {
+
+            margin-top: 30px;
+
+        }
+
+
+        /* =========================================================
+           CALENDÁRIO
+           
+           Equivalente ao por_mes.css
+           
+           A página inteira representa o calendário anual,
+           mas cada mês ocupa uma página própria na impressão.
+           ========================================================= */
+
+        .calendar {
+
+            width: 100%;
+
+            max-width: 297mm;
+
+            margin: 0 auto;
+
+        }
+
+
+        /* =========================================================
+           MÊS
+           ========================================================= */
+
+        .month-wrapper {
+
+            width: 100%;
+
+            background: #fff;
+
+            padding: 8mm;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        /* =========================================================
+           TABELA
+           ========================================================= */
+
+        table.month {
+
+            border-collapse: collapse;
+
+            table-layout: fixed;
+
+            width: 100%;
+
+            border-spacing: 2mm;
+
+        }
+
+
+        /* =========================================================
+           TÍTULO DO MÊS
+           ========================================================= */
+
+        .month-title {
+
+            color: #2f6fbd;
+
+            text-transform: capitalize;
+
+            font-size: 24pt;
+
+            font-weight: bold;
+
+            padding-bottom: 3mm;
+
+        }
+
+
+        /* =========================================================
+           CABEÇALHO
+           ========================================================= */
+
+        th {
+
+            text-align: center;
+
+            font-size: 10pt;
+
+            text-transform: uppercase;
+
+            padding: 1px;
+
+            width: calc(100% / 7);
+
+        }
+
+
+        th.domingo {
+
+            color: #2f6fbd;
+
+            font-weight: bold;
+
+        }
+
+
+        /* =========================================================
+           CÉLULAS
+           ========================================================= */
+
+        td {
+
+            padding: 1px;
+
+            width: calc(100% / 7);
+
+            height: 1.6cm;
+
+            text-align: center;
+
+            font-size: 34pt;
+
+            position: relative;
+
+        }
+
+
+        /* =========================================================
+           DIA
+           ========================================================= */
+
+        td.day {
+
+            text-align: center;
+
+        }
+
+
+        .day-number {
+
+            display: block;
+
+            width: 100%;
+
+            text-align: center;
+
+            line-height: 1;
+
+        }
+
+
+        /* =========================================================
+           DOMINGO
+           ========================================================= */
+
+        td.domingo {
+
+            color: #2f6fbd;
+
+            font-weight: bold;
+
+        }
+
+
+        /* =========================================================
+           SÁBADO
+           ========================================================= */
+
+        .sabado {
+
+            color: #555;
+
+        }
+
+
+        /* =========================================================
+           FERIADOS
+           ========================================================= */
+
+        .feriado {
+
+            font-weight: bold;
+
+        }
+
+
+        .opcional {
+
+            color: #db8433;
+
+        }
+
+
+        .araxa {
+
+            color: #1f7a4a;
+
+        }
+
+
+        .sul {
+
+            color: #4f7f96;
+
+        }
+
+
+        .minas {
+
+            color: #8b5cf6;
+
+        }
+
+
+        .sao-paulo {
+
+            color: #2563c7;
+
+        }
+
+
+        .nacional {
+
+            color: #dc2626;
+
+        }
+
+
+        /* =========================================================
+           FOLGA
+           ========================================================= */
+
+        .folga {
+
+            background-color: rgb(255, 255, 155);
+
+        }
+
+
+        /* =========================================================
+           DIAS FORA DO MÊS
+           ========================================================= */
+
+        td.noday {
+
+            color: transparent;
+
+        }
+
+
+        /* =========================================================
+           NOTAS DE FERIADO
+           ========================================================= */
+
+        .notas-feriado {
+
+            display: flex;
+
+            flex-direction: column;
+
+            font-size: 12pt;
+
+            align-items: end;
+
+            text-align: end;
+
+            margin-top: 2mm;
+
+        }
+
+
+        .holiday-desc {
+
+            font-size: 6pt;
+
+            font-weight: 300;
+
+            display: block;
+
+            width: 100%;
+
+        }
+
+
+        /* =========================================================
+           FASE DA LUA
+           ========================================================= */
+
+        .lua {
+
+            font-size: 6pt;
+
+            font-weight: 300;
+
+            display: block;
+
+            color: #2f6fbd;
+
+            width: 100%;
+
+        }
+
+
+        .notas-lua {
+
+            font-size: 6pt;
+
+            text-align: end;
+
+        }
+
+
+        .notas-lua span {
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =========================================================
+           EMOJIS
+           
+           O emoji é colocado em um elemento próprio.
+           
+           Isso permite controlar o tamanho independentemente
+           do número do dia.
+           ========================================================= */
+
+        .emoji {
+
+            display: inline-block;
+
+            font-family:
+                "Apple Color Emoji",
+                "Segoe UI Emoji",
+                "Noto Color Emoji",
+                sans-serif;
+
+            font-size: .28em;
+
+            line-height: 1;
+
+            vertical-align: middle;
+
+            position: relative;
+
+            top: -0.15em;
+
+            white-space: nowrap;
+
+        }
+
+
+        /* =========================================================
+           IMPRESSÃO
+           ========================================================= */
+
+        @page {
+
+            margin: 10mm 5mm 3mm 3mm;
+
+            size: A5 landscape;
+
+        }
+
+
+        @media print {
+
+            html,
+            body {
+
+                margin: 0;
+
+                padding: 0;
+
+                background: #fff;
+
+            }
+
+
+            .config,
+            #status,
+            #erro {
+
+                display: none !important;
+
+            }
+
+
+            #resultado {
+
+                margin: 0;
+
+            }
+
+
+            .calendar {
+
+                width: 148mm;
+
+                margin: 0;
+
+            }
+
+
+            .month-wrapper {
+
+                width: 148mm;
+
+                height: auto;
+
+                margin: 0;
+
+                padding: 0;
+
+                background: #fff;
+
+                page-break-after: always;
+
+                break-after: page;
+
+            }
+
+
+            .month-wrapper:last-child {
+
+                page-break-after: auto;
+
+                break-after: auto;
+
+            }
+
+
+            table.month {
+
+                width: 100%;
+
+            }
+
+
+            /*
+             * Firefox pode renderizar emoji colorido muito maior
+             * que o tamanho CSS especificado.
+             *
+             * O tamanho explícito abaixo reduz ainda mais o emoji
+             * durante impressão.
+             */
+
+            .emoji {
+
+                font-size: 5pt !important;
+
+                line-height: 1 !important;
+
+                display: inline-block !important;
+
+                vertical-align: middle !important;
+
+                transform: scale(.85);
+
+                transform-origin: center;
+
+            }
+
+
+            /*
+             * Evita que o emoji aumente a altura da célula.
+             */
+
+            .day-number {
+
+                line-height: 1;
+
+            }
+
+        }
+
+
+        /* =========================================================
+           CORREÇÃO ESPECÍFICA PARA FIREFOX
+           ========================================================= */
+
+        @supports (-moz-appearance: none) {
+
+            .emoji {
+
+                font-size: .24em;
+
+                line-height: 1;
+
+                vertical-align: middle;
+
+                transform: scale(.8);
+
+                transform-origin: center;
+
+            }
+
+        }
+
+
+        @media print {
+
+            @supports (-moz-appearance: none) {
+
+                .emoji {
+
+                    font-size: 4.5pt !important;
+
+                    transform: scale(.8);
+
+                }
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         CONFIGURAÇÃO
+         ========================================================= -->
+
+    <section class="config">
+
+        <h1>
+            📅 CALENDÁRIO MENSAL
+        </h1>
+
+
+        <div class="campo">
+
+            <label for="ano">
+                Ano
+            </label>
+
+            <input
+                type="number"
+                id="ano"
+                min="1900"
+                max="2100"
+            >
+
+        </div>
+
+
+        <div class="campo">
+
+            <label for="folgaSeed">
+                Folga seed
+            </label>
+
+            <input
+                type="date"
+                id="folgaSeed"
+            >
+
+            <div class="ajuda">
+                A primeira folga. As próximas ocorrem a cada 6 dias.
+            </div>
+
+        </div>
+
+
+        <button id="gerar">
+            GERAR CALENDÁRIO
+        </button>
+
+
+        <div id="status"></div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ERRO
+         ========================================================= -->
+
+    <div id="erro"></div>
+
+
+    <!-- =========================================================
+         RESULTADO
+         ========================================================= -->
+
+    <div id="resultado"></div>
+
+
+    <script>
+
+        // =========================================================
+        // ELEMENTOS
+        // =========================================================
+
+        const botao =
+            document.getElementById("gerar");
+
+        const status =
+            document.getElementById("status");
+
+        const erro =
+            document.getElementById("erro");
+
+        const resultado =
+            document.getElementById("resultado");
+
+        const config =
+            document.querySelector(".config");
+
+
+        // =========================================================
+        // ANO PADRÃO
+        // =========================================================
+
+        const anoAtual =
+            new Date().getFullYear();
+
+
+        document.getElementById("ano").value =
+            anoAtual;
+
+
+        // =========================================================
+        // FOLGA SEED PADRÃO
+        // =========================================================
+
+        document.getElementById("folgaSeed").value =
+            `${anoAtual}-01-05`;
+
+
+        // =========================================================
+        // BOTÃO
+        // =========================================================
+
+        botao.addEventListener(
+            "click",
+            gerar
+        );
+
+
+        // =========================================================
+        // GERAR
+        // =========================================================
+
+        async function gerar() {
+
+            erro.style.display = "none";
+
+            erro.textContent = "";
+
+            resultado.innerHTML = "";
+
+            botao.disabled = true;
+
+
+            try {
+
+                // =================================================
+                // PARÂMETROS
+                // =================================================
+
+                const ano =
+                    Number(
+                        document.getElementById("ano").value
+                    );
+
+
+                const folgaSeed =
+                    document.getElementById(
+                        "folgaSeed"
+                    ).value;
+
+
+                // =================================================
+                // VALIDAÇÃO
+                // =================================================
+
+                if (
+                    !Number.isInteger(ano) ||
+                    ano < 1900 ||
+                    ano > 2100
+                ) {
+
+                    throw new Error(
+                        "Informe um ano entre 1900 e 2100."
+                    );
+
+                }
+
+
+                if (!folgaSeed) {
+
+                    throw new Error(
+                        "Informe a folga seed."
+                    );
+
+                }
+
+
+                // =================================================
+                // PYODIDE
+                // =================================================
+
+                status.textContent =
+                    "🐍 Carregando Pyodide...";
+
+
+                const pyodide =
+                    await loadPyodide();
+
+
+                // =================================================
+                // MICROPIP
+                // =================================================
+
+                status.textContent =
+                    "📦 Carregando micropip...";
+
+
+                await pyodide.loadPackage(
+                    "micropip"
+                );
+
+
+                const micropip =
+                    pyodide.pyimport(
+                        "micropip"
+                    );
+
+
+                // =================================================
+                // HOLIDAYS
+                // =================================================
+
+                status.textContent =
+                    "📦 Instalando holidays...";
+
+
+                await micropip.install(
+                    "holidays"
+                );
+
+
+                // =================================================
+                // PASSAR PARÂMETROS
+                // =================================================
+
+                pyodide.globals.set(
+                    "ANO",
+                    ano
+                );
+
+
+                pyodide.globals.set(
+                    "FOLGA_SEED_STR",
+                    folgaSeed
+                );
+
+
+                // =================================================
+                // PYTHON
+                // =================================================
+
+                status.textContent =
+                    "⚙️ Gerando calendário...\n" +
+                    "📅 Calculando feriados, folgas e fases da lua...";
+
+
+                const python = `
+
+from calendar import LocaleTextCalendar, SUNDAY
+from datetime import date, timedelta
+import holidays
+
+
+# =============================================================
+# CONFIGURAÇÃO
+# =============================================================
+
+YEAR = ANO
+
+FOLGA_SEED = date.fromisoformat(
+    FOLGA_SEED_STR
+)
+
+
+# =============================================================
+# CALENDÁRIO
+# =============================================================
+
+cal = LocaleTextCalendar(
+    firstweekday=SUNDAY
+)
+
+
+# =============================================================
+# NOMES
+# =============================================================
+
+MONTH_LABELS = {
+
+    1: "janeiro",
+    2: "fevereiro",
+    3: "março",
+    4: "abril",
+    5: "maio",
+    6: "junho",
+    7: "julho",
+    8: "agosto",
+    9: "setembro",
+    10: "outubro",
+    11: "novembro",
+    12: "dezembro",
+
+}
+
+
+WEEKDAY_LABEL = [
+
+    "domingo",
+    "segunda",
+    "terça",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sábado",
+
+]
+
+
+WEEKDAY_CLASS = [
+
+    "domingo",
+    "segunda",
+    "terca",
+    "quarta",
+    "quinta",
+    "sexta",
+    "sabado",
+
+]
+
+
+# =============================================================
+# FOLGAS
+#
+# A seed é totalmente parametrizável.
+#
+# Exemplo:
+#
+# 2026-01-05
+#
+# gera:
+#
+# 05/01
+# 11/01
+# 17/01
+# 23/01
+# ...
+# =============================================================
+
+def get_folgas():
+
+    folgas = set()
+
+    atual = FOLGA_SEED
+
+
+    # ---------------------------------------------------------
+    # Recuar até o início do ano caso a seed seja anterior
+    # ---------------------------------------------------------
+
+    if atual < date(YEAR, 1, 1):
+
+        dias = (
+            date(YEAR, 1, 1) - atual
+        ).days
+
+        ciclos = dias // 6
+
+        atual += timedelta(
+            days=ciclos * 6
+        )
+
+
+        while atual < date(YEAR, 1, 1):
+
+            atual += timedelta(
+                days=6
+            )
+
+
+    # ---------------------------------------------------------
+    # Avançar até entrar no ano
+    # ---------------------------------------------------------
+
+    while atual < date(YEAR, 1, 1):
+
+        atual += timedelta(
+            days=6
+        )
+
+
+    # ---------------------------------------------------------
+    # Gerar folgas do ano
+    # ---------------------------------------------------------
+
+    while atual <= date(YEAR, 12, 31):
+
+        folgas.add(
+            atual
+        )
+
+        atual += timedelta(
+            days=6
+        )
+
+
+    return folgas
+
+
+# =============================================================
+# FERIADOS
+# =============================================================
+
+def get_feriados():
+
+    nacional = holidays.country_holidays(
+        "BR",
+        years=YEAR,
+        language="pt_BR"
+    )
+
+
+    sp = holidays.country_holidays(
+        "BR",
+        subdiv="SP",
+        years=YEAR,
+        language="pt_BR"
+    )
+
+
+    mg = holidays.country_holidays(
+        "BR",
+        subdiv="MG",
+        years=YEAR,
+        language="pt_BR"
+    )
+
+
+    rs = holidays.country_holidays(
+        "BR",
+        subdiv="RS",
+        years=YEAR,
+        language="pt_BR"
+    )
+
+
+    opcionais = {
+
+        **holidays.country_holidays(
+            "BR",
+            years=YEAR,
+            categories="optional",
+            language="pt_BR"
+        ),
+
+        date(
+            YEAR,
+            2,
+            18
+        ):
+            "Quarta-feira de Cinzas<br/>(facultativo até as 14h)",
+
+    }
+
+
+    araxa = {
+
+        **{
+
+            hdate: hname
+
+            for hdate, hname
+            in opcionais.items()
+
+            if hname in [
+                "Carnaval",
+                "Corpus Christi"
+            ]
+
+        },
+
+
+        date(
+            YEAR,
+            8,
+            8
+        ):
+            "São Domingos",
+
+
+        date(
+            YEAR,
+            8,
+            15
+        ):
+            "Nossa Senhora da Abadia",
+
+
+        date(
+            YEAR,
+            12,
+            19
+        ):
+            "Aniversário de Araxá",
+
+    }
+
+
+    feriados = {
+
+        **{
+            hdate: [
+                hname,
+                "opcional"
+            ]
+
+            for hdate, hname
+            in opcionais.items()
+        },
+
+
+        **{
+            hdate: [
+                hname,
+                "araxa"
+            ]
+
+            for hdate, hname
+            in araxa.items()
+        },
+
+
+        **{
+            hdate: [
+                hname,
+                "sul"
+            ]
+
+            for hdate, hname
+            in rs.items()
+        },
+
+
+        **{
+            hdate: [
+                hname,
+                "minas"
+            ]
+
+            for hdate, hname
+            in mg.items()
+        },
+
+
+        **{
+            hdate: [
+                hname,
+                "sao-paulo"
+            ]
+
+            for hdate, hname
+            in sp.items()
+        },
+
+
+        **{
+            hdate: [
+                hname,
+                "nacional"
+            ]
+
+            for hdate, hname
+            in nacional.items()
+        },
+
+    }
+
+
+    return feriados
+
+
+# =============================================================
+# FASE DA LUA
+# =============================================================
+
+def fase_da_lua(
+    d: date
+):
+
+    lua_nova_ref = date(
+        2000,
+        1,
+        6
+    )
+
+    ciclo = 29.53058867
+
+    dias = (
+        d - lua_nova_ref
+    ).days
+
+    idade = dias % ciclo
+
+
+    if idade < 7.38265:
+
+        return "Lua Nova 🌑"
+
+
+    elif idade < 14.76529:
+
+        return "Crescente 🌓"
+
+
+    elif idade < 22.14794:
+
+        return "Lua Cheia 🌕"
+
+
+    else:
+
+        return "Minguante 🌗"
+
+
+# =============================================================
+# FASES DA LUA
+# =============================================================
+
+def get_fases_lua():
+
+    inicio = date(
+        YEAR,
+        1,
+        1
+    )
+
+    fim = date(
+        YEAR,
+        12,
+        31
+    )
+
+
+    resultado = {}
+
+
+    atual = inicio
+
+    fase_anterior = fase_da_lua(
+        atual
+    )
+
+
+    atual += timedelta(
+        days=1
+    )
+
+
+    while atual <= fim:
+
+        fase_atual = fase_da_lua(
+            atual
+        )
+
+
+        if fase_atual != fase_anterior:
+
+            resultado[
+                atual
+            ] = fase_atual
+
+            fase_anterior = fase_atual
+
+
+        atual += timedelta(
+            days=1
+        )
+
+
+    return resultado
+
+
+# =============================================================
+# DADOS
+# =============================================================
+
+FERIADOS = get_feriados()
+
+FOLGAS = get_folgas()
+
+FASES_LUA = get_fases_lua()
+
+
+# =============================================================
+# EMOJIS
+# =============================================================
+
+EMOJIS_FERIADOS = {
+
+    "Confraternização Universal":
+        "🎆",
+
+    "Carnaval":
+        "🎭",
+
+    "Quarta-feira de Cinzas":
+        "🩶",
+
+    "Sexta-feira Santa":
+        "✝️",
+
+    "Corpus Christi":
+        "🙏",
+
+    "Tiradentes":
+        "🚩",
+
+    "Dia do Trabalhador":
+        "🛠️",
+
+    "Independência do Brasil":
+        "🇧🇷",
+
+    "Revolução Constitucionalista":
+        "⚔️",
+
+    "São Domingos":
+        "⛪",
+
+    "Nossa Senhora da Abadia":
+        "🙏",
+
+    "Nossa Senhora Aparecida":
+        "⛪",
+
+    "Finados":
+        "🕯️",
+
+    "Proclamação da República":
+        "🏛️",
+
+    "Dia Nacional de Zumbi e da Consciência Negra":
+        "✊",
+
+    "Aniversário de Araxá":
+        "🎉",
+
+    "Véspera de Natal":
+        "🎁",
+
+    "Natal":
+        "🎄",
+
+    "Véspera de Ano-Novo":
+        "🥂",
+
+}
+
+
+# =============================================================
+# GERAR UM MÊS
+# =============================================================
+
+def gerar_mes(
+    month
+):
+
+    html = f"""
+
+    <div class="month-wrapper">
+
+        <table
+            border="0"
+            cellpadding="0"
+            cellspacing="0"
+            class="month"
+        >
+
+            <tr>
+
+                <th
+                    colspan="7"
+                    class="month-title"
+                >
+                    {MONTH_LABELS[month].capitalize()}
+                </th>
+
+            </tr>
+
+
+            <tr>
+
+    """
+
+
+    # ---------------------------------------------------------
+    # CABEÇALHO
+    # ---------------------------------------------------------
+
+    for label, css_class in zip(
+        WEEKDAY_LABEL,
+        WEEKDAY_CLASS
+    ):
+
+        html += (
+
+            f'<th class="{css_class}">'
+
+            f'{label[:3]}'
+
+            '</th>'
+
+        )
+
+
+    html += "</tr>"
+
+
+    # ---------------------------------------------------------
+    # DIAS
+    # ---------------------------------------------------------
+
+    month_holidays = []
+
+    lua_month = []
+
+
+    for week in cal.monthdays2calendar(
+        YEAR,
+        month
+    ):
+
+        html += "<tr>"
+
+
+        for day, weekday in week:
+
+            css_class = WEEKDAY_CLASS[
+                weekday
+            ]
+
+
+            if day == 0:
+
+                html += (
+
+                    '<td class="noday">'
+                    '&nbsp;'
+                    '</td>'
+
+                )
+
+                continue
+
+
+            current_date = date(
+                YEAR,
+                month,
+                day
+            )
+
+
+            classes = [
+
+                css_class,
+                "day"
+
+            ]
+
+
+            # -------------------------------------------------
+            # FERIADO
+            # -------------------------------------------------
+
+            holiday =
+                FERIADOS.get(
+                    current_date
+                )
+
+
+            if holiday:
+
+                nome, categoria = holiday
+
+
+                classes.append(
+                    "feriado"
+                )
+
+
+                classes.append(
+                    categoria
+                )
+
+
+                month_holidays.append(
+
+                    (
+                        day,
+                        nome,
+                        categoria
+                    )
+
+                )
+
+
+            # -------------------------------------------------
+            # FOLGA
+            # -------------------------------------------------
+
+            if current_date in FOLGAS:
+
+                classes.append(
+                    "folga"
+                )
+
+
+            # -------------------------------------------------
+            # LUA
+            # -------------------------------------------------
+
+            fase = FASES_LUA.get(
+                current_date
+            )
+
+
+            if fase:
+
+                lua_month.append(
+
+                    (
+                        day,
+                        fase
+                    )
+
+                )
+
+
+            # -------------------------------------------------
+            # EMOJI
+            # -------------------------------------------------
+
+            emoji = ""
+
+
+            if holiday:
+
+                nome, categoria = holiday
+
+
+                emoji_char = None
+
+
+                for nome_emoji, valor in EMOJIS_FERIADOS.items():
+
+                    if nome_emoji in nome:
+
+                        emoji_char = valor
+
+                        break
+
+
+                if emoji_char:
+
+                    emoji = (
+
+                        f'<span class="emoji">'
+                        f'{emoji_char}'
+                        f'</span>'
+
+                    )
+
+
+            # -------------------------------------------------
+            # CÉLULA
+            # -------------------------------------------------
+
+            html += (
+
+                f'<td class="{" ".join(classes)}">'
+
+                f'<span class="day-number">'
+
+                f'{day}'
+
+                f'{emoji}'
+
+                '</span>'
+
+                '</td>'
+
+            )
+
+
+        html += "</tr>"
+
+
+    # ---------------------------------------------------------
+    # NOTAS DE FERIADOS
+    # ---------------------------------------------------------
+
+    holiday_notes = ""
+
+
+    if month_holidays:
+
+        holiday_notes = "".join(
+
+            f'<span class="{categoria}">'
+
+            f'{day} - {nome}'
+
+            '</span>'
+
+            for day, nome, categoria
+            in month_holidays
+
+        )
+
+
+    html += f"""
+
+        <tr>
+
+            <td></td>
+
+            <td></td>
+
+            <td colspan="5">
+
+                <div class="notas-feriado">
+
+                    {holiday_notes}
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    """
+
+
+    # ---------------------------------------------------------
+    # NOTAS DA LUA
+    # ---------------------------------------------------------
+
+    lua_notes = "".join(
+
+        f'<span>{day} - {fase}</span>'
+
+        for day, fase
+        in lua_month
+
+    )
+
+
+    html += f"""
+
+        <tr class="notas-lua">
+
+            <td colspan="7">
+
+                <div class="notas-lua">
+
+                    {lua_notes}
+
+                </div>
+
+            </td>
+
+        </tr>
+
+    """
+
+
+    html += """
+
+        </table>
+
+    </div>
+
+    """
+
+
+    return html
+
+
+# =============================================================
+# GERAR CALENDÁRIO
+# =============================================================
+
+def gerar_html():
+
+    meses = [
+
+        gerar_mes(month)
+
+        for month
+        in range(1, 13)
+
+    ]
+
+
+    return (
+
+        '<div class="calendar">'
+
+        + "".join(meses)
+
+        + '</div>'
+
+    )
+
+
+gerar_html()
+
+                `;
+
+
+                // =================================================
+                // CORREÇÃO
+                //
+                // O Python acima usa uma quebra de linha em:
+                //
+                // holiday =
+                //
+                // Corrigimos antes da execução para manter
+                // o código legível.
+                // =================================================
+
+                const pythonCorrigido =
+                    python.replace(
+                        "            holiday =\n                FERIADOS.get(",
+                        "            holiday = FERIADOS.get("
+                    );
+
+
+                // =================================================
+                // EXECUTAR
+                // =================================================
+
+                const html =
+                    await pyodide.runPythonAsync(
+                        pythonCorrigido
+                    );
+
+
+                // =================================================
+                // MOSTRAR
+                // =================================================
+
+                resultado.innerHTML =
+                    html;
+
+
+                config.style.display =
+                    "none";
+
+
+                status.textContent =
+                    "✓ Calendário mensal gerado.";
+
+
+            }
+
+            catch (e) {
+
+                console.error(e);
+
+                erro.style.display =
+                    "block";
+
+                erro.textContent =
+                    "ERRO:\n\n" +
+                    (
+                        e?.stack ||
+                        e?.message ||
+                        String(e)
+                    );
+
+                status.textContent =
+                    "❌ Falha ao gerar.";
+
+            }
+
+
+            finally {
+
+                botao.disabled =
+                    false;
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

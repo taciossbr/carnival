@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>📋 TAREFAS ☑️</title>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            padding: 20px;
+
+            font-family:
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #f2f2f2;
+
+            color: #000;
+
+        }
+
+
+        /* =========================================================
+           CONFIGURAÇÃO
+           ========================================================= */
+
+        .config {
+
+            width: 100%;
+
+            max-width: 500px;
+
+            margin: 0 auto;
+
+            background: #fff;
+
+            border: 3px solid #000;
+
+            padding: 20px;
+
+        }
+
+
+        .config h1 {
+
+            margin: 0 0 20px 0;
+
+            font-size: 24px;
+
+            text-align: center;
+
+            border-bottom: 4px solid #000;
+
+            padding-bottom: 10px;
+
+        }
+
+
+        .campo {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .campo label {
+
+            display: block;
+
+            font-weight: bold;
+
+            margin-bottom: 6px;
+
+        }
+
+
+        .campo input {
+
+            width: 100%;
+
+            padding: 10px;
+
+            border: 2px solid #000;
+
+            background: #fff;
+
+            color: #000;
+
+            font-size: 18px;
+
+        }
+
+
+        #titulo {
+
+            font-size: 18px;
+
+        }
+
+
+        .periodo-info {
+
+            margin-top: 5px;
+
+            font-size: 12px;
+
+            color: #555;
+
+        }
+
+
+        #gerar {
+
+            width: 100%;
+
+            border: 0;
+
+            background: #000;
+
+            color: #fff;
+
+            padding: 14px;
+
+            font-size: 20px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        #gerar:hover {
+
+            opacity: 0.8;
+
+        }
+
+
+        #gerar:disabled {
+
+            opacity: 0.5;
+
+            cursor: wait;
+
+        }
+
+
+        /* =========================================================
+           STATUS
+           ========================================================= */
+
+        #status {
+
+            margin-top: 15px;
+
+            font-family: monospace;
+
+            font-size: 13px;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           ERRO
+           ========================================================= */
+
+        #erro {
+
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 15px;
+
+            border: 3px solid #900;
+
+            color: #900;
+
+            background: #fff;
+
+            font-family: monospace;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           RESULTADO
+           ========================================================= */
+
+        #resultado {
+
+            margin-top: 30px;
+
+        }
+
+
+        /* =========================================================
+           TABELA TÉRMICA
+           ========================================================= */
+
+        .thermal {
+
+            width: 364px;
+
+            font-family: sans-serif;
+
+            margin: 0 auto;
+
+            padding: 10px;
+
+            color: #000;
+
+            background: #fff;
+
+        }
+
+
+        .thermal .header {
+
+            text-align: center;
+
+            font-size: 24px;
+
+            font-weight: bold;
+
+            border-bottom: 5px solid #000;
+
+            margin-bottom: 10px;
+
+            padding-bottom: 5px;
+
+        }
+
+
+        .thermal .mes {
+
+            text-align: center;
+
+            background-color: #000;
+
+            color: #fff;
+
+            font-weight: bold;
+
+            padding: 5px;
+
+            margin: 15px 0 5px 0;
+
+        }
+
+
+        .thermal table {
+
+            width: 100%;
+
+            border-collapse: collapse;
+
+        }
+
+
+        .thermal td {
+
+            border-bottom: 5px solid #000;
+
+            padding: 8px 0;
+
+            font-size: 24px;
+
+        }
+
+
+        .thermal .dia {
+
+            width: 48px;
+
+            font-weight: bold;
+
+        }
+
+
+        .thermal .tag {
+
+            text-align: right;
+
+            font-weight: bold;
+
+        }
+
+
+        .thermal .hol {
+
+            font-size: 10px;
+
+        }
+
+
+        .thermal .footer {
+
+            text-align: center;
+
+            margin-top: 20px;
+
+            border-top: 5px solid #000;
+
+            padding-top: 10px;
+
+            font-size: 18px;
+
+        }
+
+
+        /* =========================================================
+           IMPRESSÃO
+           ========================================================= */
+
+        @media print {
+
+            @page {
+
+                size: 58mm auto;
+
+                margin: 0;
+
+            }
+
+
+            html,
+            body {
+
+                margin: 0;
+
+                padding: 0;
+
+                background: #fff;
+
+            }
+
+
+            .config,
+            #status,
+            #erro {
+
+                display: none !important;
+
+            }
+
+
+            #resultado {
+
+                margin: 0;
+
+            }
+
+
+            .thermal {
+
+                width: 58mm;
+
+                margin: 0;
+
+                padding: 2.5mm;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         PRÉ-TELA DE CONFIGURAÇÃO
+         ========================================================= -->
+
+    <section class="config">
+
+        <h1>
+            📋 TAREFAS ☑️
+        </h1>
+
+
+        <div class="campo">
+
+            <label for="dataInicio">
+                Data inicial
+            </label>
+
+            <input
+                type="date"
+                id="dataInicio"
+            >
+
+        </div>
+
+
+        <div class="campo">
+
+            <label for="dataFim">
+                Data final
+            </label>
+
+            <input
+                type="date"
+                id="dataFim"
+            >
+
+            <div class="periodo-info">
+                Por padrão, o período engloba o mês atual.
+            </div>
+
+        </div>
+
+
+        <div class="campo">
+
+            <label for="titulo">
+                Título
+            </label>
+
+            <input
+                type="text"
+                id="titulo"
+                value="📋 TAREFAS ☑️"
+            >
+
+        </div>
+
+
+        <button id="gerar">
+            GERAR
+        </button>
+
+
+        <div id="status"></div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ERRO
+         ========================================================= -->
+
+    <div id="erro"></div>
+
+
+    <!-- =========================================================
+         RESULTADO
+         ========================================================= -->
+
+    <div id="resultado"></div>
+
+
+    <script>
+
+        // =========================================================
+        // UTILITÁRIOS DE DATA
+        // =========================================================
+
+        function formatarDataInput(data) {
+
+            const ano =
+                data.getFullYear();
+
+            const mes =
+                String(
+                    data.getMonth() + 1
+                ).padStart(2, "0");
+
+            const dia =
+                String(
+                    data.getDate()
+                ).padStart(2, "0");
+
+            return `${ano}-${mes}-${dia}`;
+        }
+
+
+        function primeiroDiaMesAtual() {
+
+            const hoje = new Date();
+
+            return new Date(
+                hoje.getFullYear(),
+                hoje.getMonth(),
+                1
+            );
+
+        }
+
+
+        function ultimoDiaMesAtual() {
+
+            const hoje = new Date();
+
+            return new Date(
+                hoje.getFullYear(),
+                hoje.getMonth() + 1,
+                0
+            );
+
+        }
+
+
+        // =========================================================
+        // PREENCHE O PERÍODO PADRÃO
+        //
+        // Primeiro dia → último dia do mês atual.
+        // =========================================================
+
+        document.getElementById("dataInicio").value =
+            formatarDataInput(
+                primeiroDiaMesAtual()
+            );
+
+
+        document.getElementById("dataFim").value =
+            formatarDataInput(
+                ultimoDiaMesAtual()
+            );
+
+
+        // =========================================================
+        // ELEMENTOS
+        // =========================================================
+
+        const botao =
+            document.getElementById("gerar");
+
+        const status =
+            document.getElementById("status");
+
+        const erro =
+            document.getElementById("erro");
+
+        const resultado =
+            document.getElementById("resultado");
+
+        const config =
+            document.querySelector(".config");
+
+
+        // =========================================================
+        // GERAR
+        // =========================================================
+
+        botao.addEventListener(
+            "click",
+            gerar
+        );
+
+
+        async function gerar() {
+
+            erro.style.display = "none";
+
+            resultado.innerHTML = "";
+
+            botao.disabled = true;
+
+
+            try {
+
+                // =================================================
+                // OBTER PARÂMETROS
+                // =================================================
+
+                const dataInicio =
+                    document.getElementById(
+                        "dataInicio"
+                    ).value;
+
+
+                const dataFim =
+                    document.getElementById(
+                        "dataFim"
+                    ).value;
+
+
+                const titulo =
+                    document.getElementById(
+                        "titulo"
+                    ).value.trim();
+
+
+                // =================================================
+                // VALIDAR
+                // =================================================
+
+                if (!dataInicio) {
+
+                    throw new Error(
+                        "Informe a data inicial."
+                    );
+
+                }
+
+
+                if (!dataFim) {
+
+                    throw new Error(
+                        "Informe a data final."
+                    );
+
+                }
+
+
+                if (dataFim < dataInicio) {
+
+                    throw new Error(
+                        "A data final não pode ser anterior à data inicial."
+                    );
+
+                }
+
+
+                if (!titulo) {
+
+                    throw new Error(
+                        "Informe um título."
+                    );
+
+                }
+
+
+                // =================================================
+                // PYODIDE
+                // =================================================
+
+                status.textContent =
+                    "🐍 Carregando Pyodide...";
+
+
+                const pyodide =
+                    await loadPyodide();
+
+
+                // =================================================
+                // MICROPIP
+                // =================================================
+
+                status.textContent =
+                    "🐍 Pyodide carregado.\n" +
+                    "📦 Carregando micropip...";
+
+
+                await pyodide.loadPackage(
+                    "micropip"
+                );
+
+
+                const micropip =
+                    pyodide.pyimport(
+                        "micropip"
+                    );
+
+
+                // =================================================
+                // HOLIDAYS
+                // =================================================
+
+                status.textContent =
+                    "📦 Instalando holidays...";
+
+
+                await micropip.install(
+                    "holidays"
+                );
+
+
+                // =================================================
+                // PASSAR PARÂMETROS PARA PYTHON
+                // =================================================
+
+                pyodide.globals.set(
+                    "DATA_INICIO_STR",
+                    dataInicio
+                );
+
+
+                pyodide.globals.set(
+                    "DATA_FIM_STR",
+                    dataFim
+                );
+
+
+                pyodide.globals.set(
+                    "TITLE",
+                    titulo
+                );
+
+
+                // =================================================
+                // PYTHON
+                // =================================================
+
+                status.textContent =
+                    "⚙️ Executando Python...\n" +
+                    "📅 Calculando feriados...";
+
+
+                const python = `
+
+from datetime import date, timedelta
+import holidays
+
+
+# =============================================================
+# PARÂMETROS RECEBIDOS DO HTML
+# =============================================================
+
+DATA_INICIO = date.fromisoformat(
+    DATA_INICIO_STR
+)
+
+DATA_FIM = date.fromisoformat(
+    DATA_FIM_STR
+)
+
+
+# =============================================================
+# ANOS
+# =============================================================
+
+YEAR = range(
+    DATA_INICIO.year,
+    DATA_FIM.year + 1
+)
+
+
+# =============================================================
+# ABREVIAÇÕES
+# =============================================================
+
+SHORTEN_HOLIDAYS_TERMS = {
+
+    "Confraternização": "Conf.",
+
+    "Revolução": "Rev.",
+
+    "Proclamação": "Proc.",
+
+    "Dia Nacional de Zumbi e da Consciência Negra":
+        "Consciência Negra",
+
+    "Nossa Senhora":
+        "N. Sra.",
+
+    "Início da Quaresma":
+        "Quarta-feira de Cinzas",
+}
+
+
+# =============================================================
+# FERIADOS
+# =============================================================
+
+FERIADOS_NACIONAIS = {
+
+    **{
+        k: v + " - RS"
+        for k, v in holidays.country_holidays(
+            "BR",
+            subdiv="RS",
+            years=YEAR,
+            language="pt_BR"
+        ).items()
+    },
+
+
+    **{
+        k: v + " - MG"
+        for k, v in holidays.country_holidays(
+            "BR",
+            subdiv="MG",
+            years=YEAR,
+            language="pt_BR"
+        ).items()
+    },
+
+
+    **{
+        k: v + " - SP"
+        for k, v in holidays.country_holidays(
+            "BR",
+            subdiv="SP",
+            years=YEAR,
+            language="pt_BR"
+        ).items()
+    },
+
+
+    **holidays.country_holidays(
+        "BR",
+        years=YEAR,
+        language="pt_BR"
+    ),
+
+
+    **{
+        hdate: hname
+
+        for hdate, hname
+        in holidays.country_holidays(
+            "BR",
+            years=YEAR,
+            categories="optional",
+            language="pt_BR"
+        ).items()
+
+        if hname in [
+            "Carnaval",
+            "Início da Quaresma",
+            "Corpus Christi",
+            "Véspera de Natal",
+            "Véspera de Ano-Novo"
+        ]
+    },
+
+
+    # =========================================================
+    # ARAXÁ
+    # =========================================================
+
+    date(
+        DATA_INICIO.year,
+        8,
+        8
+    ):
+        "São Domingos - Araxá",
+
+
+    date(
+        DATA_INICIO.year,
+        8,
+        15
+    ):
+        "Nossa Senhora da Abadia - Araxá",
+
+
+    date(
+        DATA_INICIO.year,
+        12,
+        19
+    ):
+        "Aniversário de Araxá",
+}
+
+
+# =============================================================
+# ABREVIAR NOMES
+# =============================================================
+
+FERIADOS_NACIONAIS = {
+
+    k: next(
+
+        (
+            v.replace(
+                longo,
+                curto
+            )
+
+            for longo, curto
+            in SHORTEN_HOLIDAYS_TERMS.items()
+
+            if longo in v
+        ),
+
+        v
+    )
+
+    for k, v
+    in FERIADOS_NACIONAIS.items()
+}
+
+
+# =============================================================
+# MESES
+# =============================================================
+
+MESES = {
+
+    1: "JANEIRO",
+    2: "FEVEREIRO",
+    3: "MARÇO",
+    4: "ABRIL",
+    5: "MAIO",
+    6: "JUNHO",
+    7: "JULHO",
+    8: "AGOSTO",
+    9: "SETEMBRO",
+    10: "OUTUBRO",
+    11: "NOVEMBRO",
+    12: "DEZEMBRO",
+
+}
+
+
+# =============================================================
+# EMOJIS
+# =============================================================
+
+EMOJIS_FERIADOS = {
+
+    "Conf. Universal":
+        "🎆",
+
+    "Confraternização Universal":
+        "🎆",
+
+    "Carnaval":
+        "🎭",
+
+    "Quarta-feira de Cinzas":
+        "🩶",
+
+    "Sexta-feira Santa":
+        "✝️",
+
+    "Corpus Christi":
+        "🙏",
+
+    "Tiradentes":
+        "🚩",
+
+    "Dia do Trabalhador":
+        "🛠️",
+
+    "Independência do Brasil":
+        "🇧🇷",
+
+    "Rev. Constitucionalista - SP":
+        "⚔️",
+
+    "Dia do Gaúcho - RS":
+        "🧉",
+
+    "São Domingos - Araxá":
+        "⛪",
+
+    "N. Sra. da Abadia - Araxá":
+        "🙏",
+
+    "N. Sra. Aparecida":
+        "⛪",
+
+    "Nossa Senhora Aparecida":
+        "⛪",
+
+    "Finados":
+        "🕯️",
+
+    "Proc. da República":
+        "🏛️",
+
+    "Proclamação da República":
+        "🏛️",
+
+    "Dia Nacional de Zumbi e da Consciência Negra":
+        "✊",
+
+    "Consciência Negra":
+        "✊",
+
+    "Aniversário de Araxá":
+        "🎉",
+
+    "Véspera de Natal":
+        "🎁",
+
+    "Natal":
+        "🎄",
+
+    "Véspera de Ano-Novo":
+        "🥂",
+}
+
+
+# =============================================================
+# GERAR HTML
+# =============================================================
+
+def gerar_html_termico():
+
+    html = f"""
+
+    <div class="thermal">
+
+        <div class="header">
+            {TITLE}
+        </div>
+
+    """
+
+
+    mes_atual = None
+
+    curr = DATA_INICIO
+
+
+    while curr <= DATA_FIM:
+
+
+        # -----------------------------------------------------
+        # MÊS
+        # -----------------------------------------------------
+
+        if curr.month != mes_atual:
+
+            mes_atual = curr.month
+
+            nome_mes = MESES[curr.month]
+
+            html += f"""
+
+                <div class="mes">
+                    {nome_mes}
+                </div>
+
+                <table>
+
+            """
+
+
+        # -----------------------------------------------------
+        # TAG
+        # -----------------------------------------------------
+
+        tag = ""
+
+
+        # -----------------------------------------------------
+        # FERIADO
+        # -----------------------------------------------------
+
+        if curr in FERIADOS_NACIONAIS:
+
+            nome = FERIADOS_NACIONAIS[curr]
+
+            emoji = EMOJIS_FERIADOS.get(
+                    nome,
+                    "🎉"
+                )
+
+            tag = (
+                f'<span class="hol">'
+                f'{nome}'
+                f'</span> '
+                f'{emoji}'
+            )
+
+
+        # -----------------------------------------------------
+        # SÁBADO / DOMINGO
+        # -----------------------------------------------------
+
+        if curr.weekday() == 5:
+
+            tag += " ⚡ S"
+
+        elif curr.weekday() == 6:
+
+            tag += " 🔋 D"
+
+
+        # -----------------------------------------------------
+        # LINHA
+        # -----------------------------------------------------
+
+        html += (
+
+            "<tr>"
+
+            f'<td class="dia">'
+            f'{curr.day:02d}'
+            f'</td>'
+
+            f'<td class="tag">'
+            f'{tag}'
+            f'</td>'
+
+            "</tr>"
+
+        )
+
+
+        # -----------------------------------------------------
+        # PRÓXIMO DIA
+        # -----------------------------------------------------
+
+        next_day = curr + timedelta(days=1)
+
+
+        # -----------------------------------------------------
+        # FECHAR TABELA
+        # -----------------------------------------------------
+
+        if (
+            next_day.month != mes_atual
+            or curr == DATA_FIM
+        ):
+
+            html += "</table>"
+
+
+        curr = next_day
+
+
+    # =========================================================
+    # FOOTER
+    # =========================================================
+
+    html += """
+
+        <div class="footer">
+            🚀 FOCO
+        </div>
+
+    </div>
+
+    """
+
+
+    return html
+
+
+gerar_html_termico()
+
+                `;
+
+
+                // =================================================
+                // EXECUTAR
+                // =================================================
+
+                const html =
+                    await pyodide.runPythonAsync(
+                        python
+                    );
+
+
+                // =================================================
+                // MOSTRAR
+                // =================================================
+
+                resultado.innerHTML =
+                    html;
+
+                config.style.display = "none";
+
+
+                status.textContent =
+                    "✓ Gerado com sucesso.";
+
+
+            }
+
+            catch (e) {
+
+                console.error(e);
+
+                erro.style.display =
+                    "block";
+
+                erro.textContent =
+                    "ERRO:\n\n" +
+                    (
+                        e?.stack ||
+                        e?.message ||
+                        String(e)
+                    );
+
+                status.textContent =
+                    "❌ Falha ao gerar.";
+
+            }
+
+            finally {
+
+                botao.disabled =
+                    false;
+
+            }
+
+        }
+
+    </script>
+
+</body>
+
+</html>

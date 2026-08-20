@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pyodide Tool</title>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.0/full/pyodide.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 20px;
+    font: 16px Arial, sans-serif;
+}
+
+#app {
+    max-width: 900px;
+    margin: auto;
+}
+
+#status {
+    margin: 10px 0;
+    font-family: monospace;
+}
+
+#erro {
+    display: none;
+    padding: 15px;
+    margin: 15px 0;
+    border: 2px solid #900;
+    color: #900;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <div id="status">
+        Carregando...
+    </div>
+
+    <div id="erro"></div>
+
+    <main id="resultado"></main>
+
+</div>
+
+
+<!-- =========================================================
+     PYTHON
+     ========================================================= -->
+
+<script type="text/python" id="python">
+
+def main(params):
+    """
+    Entrada principal da tool.
+
+    params:
+        dict com os parâmetros enviados pelo JavaScript.
+
+    retorno:
+        HTML que será colocado na página.
+    """
+
+    nome = params.get("nome", "mundo")
+
+    return f"""
+        <h1>Olá, {nome}!</h1>
+        <p>Gerado pelo Python.</p>
+    """
+
+</script>
+
+
+<script>
+
+async function executar(params) {
+
+    const status =
+        document.getElementById("status");
+
+    const erro =
+        document.getElementById("erro");
+
+    const resultado =
+        document.getElementById("resultado");
+
+
+    try {
+
+        status.textContent =
+            "🐍 Carregando Pyodide...";
+
+
+        const pyodide =
+            await loadPyodide();
+
+
+        status.textContent =
+            "⚙️ Executando Python...";
+
+
+        // -----------------------------------------------------
+        // Carrega o código Python
+        // -----------------------------------------------------
+
+        const codigo =
+            document.getElementById(
+                "python"
+            ).textContent;
+
+
+        await pyodide.runPythonAsync(
+            codigo
+        );
+
+
+        // -----------------------------------------------------
+        // Obtém main(params)
+        // -----------------------------------------------------
+
+        const main =
+            pyodide.globals.get("main");
+
+
+        // -----------------------------------------------------
+        // Converte JSON → dict Python
+        // -----------------------------------------------------
+
+        const paramsPython =
+            pyodide.toPy(params);
+
+
+        // -----------------------------------------------------
+        // Executa main(params)
+        // -----------------------------------------------------
+
+        const retorno =
+            main(paramsPython);
+
+
+        // -----------------------------------------------------
+        // JS recebe o retorno
+        // -----------------------------------------------------
+
+        const html =
+            retorno.toJs
+                ? retorno.toJs()
+                : retorno;
+
+
+        paramsPython.destroy();
+        main.destroy();
+
+
+        // -----------------------------------------------------
+        // Renderiza
+        // -----------------------------------------------------
+
+        resultado.innerHTML =
+            html;
+
+
+        status.textContent =
+            "✓ Pronto.";
+
+
+    } catch (e) {
+
+        console.error(e);
+
+        erro.style.display =
+            "block";
+
+        erro.textContent =
+            e?.stack ||
+            e?.message ||
+            String(e);
+
+        status.textContent =
+            "❌ Erro.";
+
+    }
+
+}
+
+
+// =============================================================
+// PARÂMETROS DA TOOL
+// =============================================================
+
+const params = {
+
+    nome: "João",
+
+};
+
+
+// =============================================================
+// EXECUTA
+// =============================================================
+
+executar(params);
+
+</script>
+
+</body>
+</html>
