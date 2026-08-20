@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quanto falta para o Natal?</title>
+
+
+    <style>
+        /* =========================================================
+           BASE
+           ========================================================= */
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html {
+            min-height: 100%;
+            background: #07151c;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            min-height: 100vh;
+
+            padding: 20px;
+
+            font:
+                16px system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            color: #fff;
+
+            overflow-x: hidden;
+
+            background:
+                radial-gradient(circle at 50% -10%,
+                    #24556b 0%,
+                    #102d3b 32%,
+                    #07151c 70%);
+
+        }
+
+
+        /* =========================================================
+           ESTRELAS
+           ========================================================= */
+
+        body::before {
+
+            content: "";
+
+            position: fixed;
+
+            inset: 0;
+
+            pointer-events: none;
+
+            opacity: .8;
+
+            background-image:
+                radial-gradient(circle, #fff 1px, transparent 1px),
+                radial-gradient(circle, #fff 1px, transparent 1px),
+                radial-gradient(circle, #fff 2px, transparent 2px);
+
+            background-size:
+                97px 113px,
+                157px 181px,
+                241px 227px;
+
+            background-position:
+                10px 20px,
+                70px 40px,
+                120px 100px;
+
+            animation:
+                estrelas 12s linear infinite;
+
+        }
+
+
+        @keyframes estrelas {
+
+            0% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(12px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+
+        }
+
+
+        /* =========================================================
+           NEVE
+           ========================================================= */
+
+        .neve {
+
+            position: fixed;
+
+            inset: -20px 0 0;
+
+            pointer-events: none;
+
+            z-index: 20;
+
+            overflow: hidden;
+
+        }
+
+
+        .floco {
+
+            position: absolute;
+
+            top: -30px;
+
+            color: white;
+
+            user-select: none;
+
+            animation:
+                cair linear infinite;
+
+        }
+
+
+        @keyframes cair {
+
+            from {
+                transform:
+                    translate3d(0, -40px, 0) rotate(0deg);
+            }
+
+            to {
+                transform:
+                    translate3d(80px, 110vh, 0) rotate(360deg);
+            }
+
+        }
+
+
+        /* =========================================================
+           LUZES
+           ========================================================= */
+
+        .luzes {
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            right: 0;
+
+            height: 22px;
+
+            display: flex;
+
+            justify-content: space-around;
+
+            z-index: 30;
+
+            pointer-events: none;
+
+            background:
+                repeating-linear-gradient(90deg,
+                    transparent 0,
+                    transparent 35px,
+                    rgba(0, 0, 0, .7) 35px,
+                    rgba(0, 0, 0, .7) 37px);
+
+        }
+
+
+        .luz {
+
+            width: 13px;
+
+            height: 19px;
+
+            margin-top: 3px;
+
+            border-radius:
+                50% 50% 45% 45%;
+
+            background: #fff;
+
+            box-shadow:
+                0 0 7px currentColor,
+                0 0 18px currentColor,
+                0 0 30px currentColor;
+
+            animation:
+                piscar 1.4s ease-in-out infinite alternate;
+
+        }
+
+
+        .luz:nth-child(4n + 1) {
+            color: #ff3030;
+            background: #ff3030;
+        }
+
+        .luz:nth-child(4n + 2) {
+            color: #ffd83d;
+            background: #ffd83d;
+        }
+
+        .luz:nth-child(4n + 3) {
+            color: #40e879;
+            background: #40e879;
+        }
+
+        .luz:nth-child(4n + 4) {
+            color: #55a9ff;
+            background: #55a9ff;
+        }
+
+
+        .luz:nth-child(2n) {
+            animation-delay: .5s;
+        }
+
+
+        @keyframes piscar {
+
+            from {
+                opacity: .45;
+                transform: scale(.85);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1.1);
+            }
+
+        }
+
+
+        /* =========================================================
+           CONTAINER
+           ========================================================= */
+
+        .container {
+
+            position: relative;
+
+            z-index: 10;
+
+            width: 100%;
+
+            max-width: 1100px;
+
+            margin: 35px auto 0;
+
+        }
+
+
+        /* =========================================================
+           CABEÇALHO
+           ========================================================= */
+
+        .cabecalho {
+
+            text-align: center;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .cabecalho .emoji {
+
+            font-size: clamp(55px, 12vw, 100px);
+
+            line-height: 1;
+
+            display: block;
+
+            filter:
+                drop-shadow(0 8px 20px rgba(0, 0, 0, .5));
+
+            animation:
+                flutuar 3s ease-in-out infinite;
+
+        }
+
+
+        @keyframes flutuar {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(-2deg);
+            }
+
+            50% {
+                transform: translateY(-12px) rotate(2deg);
+            }
+
+        }
+
+
+        .cabecalho h1 {
+
+            margin: 12px 0 0;
+
+            font-size:
+                clamp(30px, 7vw, 70px);
+
+            line-height: .95;
+
+            font-weight: 950;
+
+            letter-spacing: -3px;
+
+            text-transform: uppercase;
+
+            text-shadow:
+                0 4px 0 #9d1515,
+                0 8px 20px rgba(0, 0, 0, .5);
+
+        }
+
+
+        .cabecalho h1 span {
+
+            display: block;
+
+            color: #ffe18a;
+
+            text-shadow:
+                0 3px 0 #b77d00,
+                0 6px 20px rgba(0, 0, 0, .5);
+
+        }
+
+
+        .subtitulo {
+
+            margin-top: 18px;
+
+            color: #cde7ef;
+
+            font-size: 18px;
+
+        }
+
+
+        /* =========================================================
+           CONFIGURAÇÃO
+           ========================================================= */
+
+        .config {
+
+            width: 100%;
+
+            max-width: 500px;
+
+            margin: 0 auto;
+
+            padding: 20px;
+
+            background: rgba(255, 255, 255, .08);
+
+            border:
+                1px solid rgba(255, 255, 255, .18);
+
+            border-radius: 18px;
+
+            backdrop-filter: blur(10px);
+
+            text-align: center;
+
+        }
+
+
+        .config h1 {
+
+            margin: 0 0 15px;
+
+            font-size: 18px;
+
+        }
+
+
+        .config button {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            background: #d92828;
+
+            color: #fff;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            box-shadow:
+                0 6px 20px rgba(0, 0, 0, .3);
+
+        }
+
+
+        .config button:hover {
+
+            background: #f23b3b;
+
+            transform: translateY(-1px);
+
+        }
+
+
+        .config button:disabled {
+
+            opacity: .6;
+
+            cursor: wait;
+
+        }
+
+
+        #status {
+
+            margin-top: 12px;
+
+            font-size: 12px;
+
+            color: #9dc4cf;
+
+        }
+
+
+        /* =========================================================
+           RESULTADO
+           ========================================================= */
+
+        #resultado {
+
+            margin-top: 25px;
+
+        }
+
+
+        .cartao {
+
+            position: relative;
+
+            overflow: hidden;
+
+            padding: clamp(20px, 5vw, 50px);
+
+            border-radius: 30px;
+
+            border:
+                2px solid rgba(255, 255, 255, .25);
+
+            background:
+                linear-gradient(145deg,
+                    rgba(255, 255, 255, .13),
+                    rgba(255, 255, 255, .04));
+
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, .45),
+                inset 0 1px 0 rgba(255, 255, 255, .15);
+
+            backdrop-filter: blur(14px);
+
+        }
+
+
+        .cartao::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 350px;
+
+            height: 350px;
+
+            border-radius: 50%;
+
+            top: -220px;
+
+            right: -150px;
+
+            background: #e63946;
+
+            filter: blur(80px);
+
+            opacity: .25;
+
+        }
+
+
+        .cartao::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 300px;
+
+            height: 300px;
+
+            border-radius: 50%;
+
+            bottom: -200px;
+
+            left: -120px;
+
+            background: #3ad878;
+
+            filter: blur(80px);
+
+            opacity: .2;
+
+        }
+
+
+        .ano {
+
+            position: relative;
+
+            z-index: 2;
+
+            text-align: center;
+
+            font-size: 20px;
+
+            font-weight: 800;
+
+            color: #c5e3eb;
+
+            letter-spacing: 5px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        .frase {
+
+            position: relative;
+
+            z-index: 2;
+
+            text-align: center;
+
+            margin: 8px 0 30px;
+
+            font-size: clamp(18px, 4vw, 26px);
+
+            color: #fff;
+
+        }
+
+
+        /* =========================================================
+           CONTADORES
+           ========================================================= */
+
+        .contador {
+
+            position: relative;
+
+            z-index: 2;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 14px;
+
+        }
+
+
+        .unidade {
+
+            position: relative;
+
+            padding:
+                clamp(18px, 4vw, 30px) 10px;
+
+            text-align: center;
+
+            border-radius: 18px;
+
+            background:
+                linear-gradient(180deg,
+                    rgba(255, 255, 255, .15),
+                    rgba(255, 255, 255, .05));
+
+            border:
+                1px solid rgba(255, 255, 255, .15);
+
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .1),
+                0 10px 30px rgba(0, 0, 0, .15);
+
+        }
+
+
+        .numero {
+
+            font-variant-numeric:
+                tabular-nums;
+
+            font-size:
+                clamp(38px, 9vw, 80px);
+
+            line-height: .9;
+
+            font-weight: 950;
+
+            color: #fff;
+
+            text-shadow:
+                0 3px 0 rgba(0, 0, 0, .25),
+                0 0 30px rgba(255, 255, 255, .15);
+
+        }
+
+
+        .unidade:nth-child(1) .numero {
+            color: #ff7676;
+        }
+
+        .unidade:nth-child(2) .numero {
+            color: #ffd76a;
+        }
+
+        .unidade:nth-child(3) .numero {
+            color: #70e891;
+        }
+
+        .unidade:nth-child(4) .numero {
+            color: #71bfff;
+        }
+
+
+        .label {
+
+            margin-top: 13px;
+
+            color: #b9d2da;
+
+            font-size: 12px;
+
+            font-weight: 800;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+        }
+
+
+        /* =========================================================
+           PROGRESSO
+           ========================================================= */
+
+        .progresso-area {
+
+            position: relative;
+
+            z-index: 2;
+
+            margin-top: 35px;
+
+        }
+
+
+        .progresso-topo {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 10px;
+
+            margin-bottom: 10px;
+
+            color: #c8dfe5;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+        }
+
+
+        .barra {
+
+            height: 18px;
+
+            padding: 3px;
+
+            overflow: hidden;
+
+            border-radius: 999px;
+
+            background:
+                rgba(0, 0, 0, .35);
+
+            border:
+                1px solid rgba(255, 255, 255, .12);
+
+        }
+
+
+        .barra-interna {
+
+            width: 0%;
+
+            height: 100%;
+
+            border-radius: inherit;
+
+            background:
+                linear-gradient(90deg,
+                    #d92332,
+                    #e84444,
+                    #ffd35a,
+                    #39d978);
+
+            box-shadow:
+                0 0 18px rgba(255, 210, 90, .45);
+
+            transition:
+                width .8s ease;
+
+        }
+
+
+        /* =========================================================
+           INFORMAÇÕES
+           ========================================================= */
+
+        .informacoes {
+
+            position: relative;
+
+            z-index: 2;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 12px;
+
+            margin-top: 20px;
+
+        }
+
+
+        .info {
+
+            padding: 16px;
+
+            text-align: center;
+
+            border-radius: 14px;
+
+            background:
+                rgba(0, 0, 0, .18);
+
+        }
+
+
+        .info strong {
+
+            display: block;
+
+            margin-bottom: 4px;
+
+            font-size: 18px;
+
+            color: #fff;
+
+        }
+
+
+        .info small {
+
+            color: #9dbac3;
+
+        }
+
+
+        /* =========================================================
+           PRESENTE
+           ========================================================= */
+
+        .presente {
+
+            position: relative;
+
+            z-index: 2;
+
+            margin: 35px auto 0;
+
+            max-width: 600px;
+
+            padding: 25px;
+
+            text-align: center;
+
+            border-radius: 20px;
+
+            background:
+                linear-gradient(135deg,
+                    rgba(211, 37, 48, .25),
+                    rgba(34, 156, 85, .2));
+
+            border:
+                1px solid rgba(255, 255, 255, .18);
+
+        }
+
+
+        .presente .emoji {
+
+            font-size: 45px;
+
+        }
+
+
+        .presente p {
+
+            margin: 10px 0 0;
+
+            color: #e4f3f6;
+
+            font-size: 17px;
+
+            line-height: 1.5;
+
+        }
+
+
+        /* =========================================================
+           RODAPÉ
+           ========================================================= */
+
+        .rodape {
+
+            position: relative;
+
+            z-index: 2;
+
+            margin-top: 25px;
+
+            text-align: center;
+
+            color: #73919b;
+
+            font-size: 12px;
+
+        }
+
+
+        /* =========================================================
+           ERRO
+           ========================================================= */
+
+        #erro {
+
+            display: none;
+
+            max-width: 900px;
+
+            margin: 20px auto;
+
+            padding: 15px;
+
+            border: 3px solid #ff5252;
+
+            border-radius: 10px;
+
+            background: #2b1010;
+
+            color: #ff8a8a;
+
+            font-family: monospace;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVO
+           ========================================================= */
+
+        @media (max-width: 650px) {
+
+            body {
+                padding: 12px;
+            }
+
+
+            .contador {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+            }
+
+
+            .informacoes {
+
+                grid-template-columns: 1fr;
+
+            }
+
+
+            .cartao {
+
+                border-radius: 22px;
+
+            }
+
+        }
+
+
+        /* =========================================================
+           IMPRESSÃO
+           ========================================================= */
+
+        @media print {
+
+            html,
+            body {
+
+                margin: 0;
+
+                padding: 0;
+
+                background: #fff;
+
+                color: #000;
+
+            }
+
+
+            .neve,
+            .luzes,
+            .config,
+            #status,
+            #erro {
+
+                display: none !important;
+
+            }
+
+
+            .cartao {
+
+                color: #000;
+
+                background: #fff;
+
+                box-shadow: none;
+
+                border: 2px solid #000;
+
+            }
+
+
+            #resultado {
+
+                margin: 0;
+
+            }
+
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         LUZES
+         ========================================================= -->
+
+    <div class="luzes">
+
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+        <span class="luz"></span>
+
+    </div>
+
+
+    <!-- =========================================================
+         NEVE
+         ========================================================= -->
+
+    <div class="neve" id="neve"></div>
+
+
+    <!-- =========================================================
+         CONTEÚDO
+         ========================================================= -->
+
+    <main class="container">
+
+
+        <header class="cabecalho">
+
+            <span class="emoji">🎄</span>
+
+            <h1>
+                Quanto falta
+                <span>para o Natal?</span>
+            </h1>
+
+            <div class="subtitulo">
+                A pergunta mais importante do ano.
+            </div>
+
+        </header>
+
+
+        <!-- =====================================================
+             CONFIGURAÇÃO
+             ===================================================== -->
+
+        <section class="config">
+
+            <h1>
+                🎅 Preparar a contagem regressiva
+            </h1>
+
+            <button id="gerar">
+                🎄 COMEÇAR A CONTAGEM
+            </button>
+
+            <div id="status"></div>
+
+        </section>
+
+
+        <!-- =====================================================
+             ERRO
+             ===================================================== -->
+
+        <div id="erro"></div>
+
+
+        <!-- =====================================================
+             RESULTADO
+             ===================================================== -->
+
+        <div id="resultado"></div>
+
+
+    </main>
+
+
+    <script>
+
+        // =========================================================
+        // ELEMENTOS
+        // =========================================================
+
+        const botao =
+            document.getElementById("gerar");
+
+        const status =
+            document.getElementById("status");
+
+        const erro =
+            document.getElementById("erro");
+
+        const resultado =
+            document.getElementById("resultado");
+
+        const neve =
+            document.getElementById("neve");
+
+
+        // =========================================================
+        // NEVE
+        // =========================================================
+
+        function criarNeve() {
+
+            const simbolos = [
+                "❄",
+                "❅",
+                "❆",
+                "•"
+            ];
+
+
+            for (let i = 0; i < 55; i++) {
+
+                const floco =
+                    document.createElement("span");
+
+                floco.className = "floco";
+
+                floco.textContent =
+                    simbolos[
+                    Math.floor(
+                        Math.random() *
+                        simbolos.length
+                    )
+                    ];
+
+                floco.style.left =
+                    Math.random() * 100 + "%";
+
+                floco.style.fontSize =
+                    (8 + Math.random() * 18) + "px";
+
+                floco.style.opacity =
+                    .25 + Math.random() * .7;
+
+                floco.style.animationDuration =
+                    (7 + Math.random() * 14) + "s";
+
+                floco.style.animationDelay =
+                    (-Math.random() * 20) + "s";
+
+                neve.appendChild(floco);
+
+            }
+
+        }
+
+
+        criarNeve();
+
+
+        // =========================================================
+        // ESTADO
+        // =========================================================
+
+        let intervalo = null;
+
+
+        // =========================================================
+        // PRÓXIMO NATAL
+        // =========================================================
+
+        function proximoNatal() {
+
+            const agora =
+                new Date();
+
+            let ano =
+                agora.getFullYear();
+
+            let natal =
+                new Date(
+                    ano,
+                    11,
+                    25,
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+
+            if (agora >= natal) {
+
+                ano++;
+
+                natal =
+                    new Date(
+                        ano,
+                        11,
+                        25,
+                        0,
+                        0,
+                        0,
+                        0
+                    );
+
+            }
+
+
+            return natal;
+
+        }
+
+
+        // =========================================================
+        // FORMATAÇÃO
+        // =========================================================
+
+        function numero(valor) {
+
+            return String(valor)
+                .padStart(2, "0");
+
+        }
+
+
+        function plural(
+            quantidade,
+            singular,
+            plural
+        ) {
+
+            return quantidade === 1
+                ? singular
+                : plural;
+
+        }
+
+
+        // =========================================================
+        // ATUALIZAÇÃO
+        // =========================================================
+
+        function atualizar(natal) {
+
+            const agora =
+                new Date();
+
+            let restante =
+                natal.getTime() -
+                agora.getTime();
+
+
+            // =========================================================
+            // NATAL CHEGOU
+            // =========================================================
+
+            if (restante <= 0) {
+
+                const frase =
+                    document.getElementById("frase");
+
+                const dias =
+                    document.getElementById("dias");
+
+                const horas =
+                    document.getElementById("horas");
+
+                const minutos =
+                    document.getElementById("minutos");
+
+                const segundos =
+                    document.getElementById("segundos");
+
+                const barra =
+                    document.getElementById("barra");
+
+                const progresso =
+                    document.getElementById("progresso");
+
+
+                if (frase)
+                    frase.textContent =
+                        "🎄 FELIZ NATAL! 🎄";
+
+                if (dias)
+                    dias.textContent = "00";
+
+                if (horas)
+                    horas.textContent = "00";
+
+                if (minutos)
+                    minutos.textContent = "00";
+
+                if (segundos)
+                    segundos.textContent = "00";
+
+                if (barra)
+                    barra.style.width = "100%";
+
+                if (progresso)
+                    progresso.textContent = "100%";
+
+
+                clearInterval(intervalo);
+
+                return;
+
+            }
+
+
+            // =========================================================
+            // UNIDADES
+            // =========================================================
+
+            const segundo =
+                1000;
+
+            const minuto =
+                segundo * 60;
+
+            const hora =
+                minuto * 60;
+
+            const dia =
+                hora * 24;
+
+
+            const dias =
+                Math.floor(
+                    restante / dia
+                );
+
+            restante %= dia;
+
+
+            const horas =
+                Math.floor(
+                    restante / hora
+                );
+
+            restante %= hora;
+
+
+            const minutos =
+                Math.floor(
+                    restante / minuto
+                );
+
+            restante %= minuto;
+
+
+            const segundos =
+                Math.floor(
+                    restante / segundo
+                );
+
+
+            // =========================================================
+            // ELEMENTOS
+            // =========================================================
+
+            const elDias =
+                document.getElementById("dias");
+
+            const elHoras =
+                document.getElementById("horas");
+
+            const elMinutos =
+                document.getElementById("minutos");
+
+            const elSegundos =
+                document.getElementById("segundos");
+
+
+            if (elDias)
+                elDias.textContent =
+                    numero(dias);
+
+            if (elHoras)
+                elHoras.textContent =
+                    numero(horas);
+
+            if (elMinutos)
+                elMinutos.textContent =
+                    numero(minutos);
+
+            if (elSegundos)
+                elSegundos.textContent =
+                    numero(segundos);
+
+
+            // =========================================================
+            // PROGRESSO DO ANO
+            // =========================================================
+
+            const agoraAno =
+                new Date(
+                    agora.getFullYear(),
+                    0,
+                    1
+                );
+
+            const proximoAno =
+                new Date(
+                    agora.getFullYear() + 1,
+                    0,
+                    1
+                );
+
+
+            const duracaoAno =
+                proximoAno.getTime() -
+                agoraAno.getTime();
+
+
+            const transcorrido =
+                agora.getTime() -
+                agoraAno.getTime();
+
+
+            let progressoAno =
+                (
+                    transcorrido /
+                    duracaoAno
+                ) * 100;
+
+
+            progressoAno =
+                Math.max(
+                    0,
+                    Math.min(
+                        100,
+                        progressoAno
+                    )
+                );
+
+
+            const barra =
+                document.getElementById(
+                    "barra"
+                );
+
+            const progresso =
+                document.getElementById(
+                    "progresso"
+                );
+
+
+            if (barra)
+                barra.style.width =
+                    progressoAno + "%";
+
+
+            if (progresso)
+                progresso.textContent =
+                    progressoAno.toFixed(1) + "%";
+
+
+            // =========================================================
+            // INFORMAÇÕES
+            // =========================================================
+
+            const elTotalDias =
+                document.getElementById(
+                    "total-dias"
+                );
+
+            const elDataNatal =
+                document.getElementById(
+                    "data-natal"
+                );
+
+            const elAnoNatal =
+                document.getElementById(
+                    "ano-natal"
+                );
+
+
+            if (elTotalDias)
+                elTotalDias.textContent =
+                    Math.ceil(
+                        (
+                            natal.getTime() -
+                            agora.getTime()
+                        ) / dia
+                    );
+
+
+            if (elDataNatal)
+                elDataNatal.textContent =
+                    natal.toLocaleDateString(
+                        "pt-BR",
+                        {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric"
+                        }
+                    );
+
+
+            if (elAnoNatal)
+                elAnoNatal.textContent =
+                    natal.getFullYear();
+
+
+            // =========================================================
+            // FRASE
+            // =========================================================
+
+            const frase =
+                document.getElementById(
+                    "frase"
+                );
+
+
+            if (!frase)
+                return;
+
+
+            if (dias === 0) {
+
+                frase.textContent =
+                    "É HOJE! 🎅🎁";
+
+            }
+
+            else if (dias <= 7) {
+
+                frase.textContent =
+                    "É praticamente amanhã! 🎁";
+
+            }
+
+            else if (dias <= 30) {
+
+                frase.textContent =
+                    "O Papai Noel já está aquecendo os motores. 🦌";
+
+            }
+
+            else if (dias <= 100) {
+
+                frase.textContent =
+                    "O Natal está chegando. Dá para sentir no ar. ✨";
+
+            }
+
+            else {
+
+                frase.textContent =
+                    "Ainda falta um pouquinho... mas o espírito natalino já começou.";
+
+            }
+
+        }
+
+        // =========================================================
+        // NATAL
+        // =========================================================
+
+        function mostrarNatal() {
+
+            clearInterval(intervalo);
+
+            document.getElementById(
+                "frase"
+            ).textContent =
+                "🎄 FELIZ NATAL! 🎄";
+
+
+            document.getElementById(
+                "dias"
+            ).textContent = "00";
+
+            document.getElementById(
+                "horas"
+            ).textContent = "00";
+
+            document.getElementById(
+                "minutos"
+            ).textContent = "00";
+
+            document.getElementById(
+                "segundos"
+            ).textContent = "00";
+
+            document.getElementById(
+                "barra"
+            ).style.width = "100%";
+
+            document.getElementById(
+                "progresso"
+            ).textContent = "100%";
+
+        }
+
+
+        // =========================================================
+        // GERAR
+        // =========================================================
+
+        botao.addEventListener(
+            "click",
+            gerar
+        );
+
+
+        function gerar() {
+
+            erro.style.display =
+                "none";
+
+            erro.textContent = "";
+
+            resultado.innerHTML = "";
+
+            botao.disabled = true;
+
+
+            try {
+
+                status.textContent =
+                    "🎅 Preparando o trenó...";
+
+
+                const natal =
+                    proximoNatal();
+
+
+                const ano =
+                    natal.getFullYear();
+
+
+                const html = `
+
+                    <section class="cartao">
+
+                        <div class="ano">
+                            NATAL DE ${ano}
+                        </div>
+
+
+                        <div
+                            class="frase"
+                            id="frase"
+                        >
+                            Calculando...
+                        </div>
+
+
+                        <div class="contador">
+
+                            <div class="unidade">
+
+                                <div
+                                    class="numero"
+                                    id="dias"
+                                >
+                                    00
+                                </div>
+
+                                <div class="label">
+                                    Dias
+                                </div>
+
+                            </div>
+
+
+                            <div class="unidade">
+
+                                <div
+                                    class="numero"
+                                    id="horas"
+                                >
+                                    00
+                                </div>
+
+                                <div class="label">
+                                    Horas
+                                </div>
+
+                            </div>
+
+
+                            <div class="unidade">
+
+                                <div
+                                    class="numero"
+                                    id="minutos"
+                                >
+                                    00
+                                </div>
+
+                                <div class="label">
+                                    Minutos
+                                </div>
+
+                            </div>
+
+
+                            <div class="unidade">
+
+                                <div
+                                    class="numero"
+                                    id="segundos"
+                                >
+                                    00
+                                </div>
+
+                                <div class="label">
+                                    Segundos
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="progresso-area">
+
+                            <div class="progresso-topo">
+
+                                <span>
+                                    🎁 O ano está passando...
+                                </span>
+
+                                <span id="progresso">
+                                    0%
+                                </span>
+
+                            </div>
+
+
+                            <div class="barra">
+
+                                <div
+                                    class="barra-interna"
+                                    id="barra"
+                                ></div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="informacoes">
+
+                            <div class="info">
+
+                                <strong id="total-dias">
+                                    —
+                                </strong>
+
+                                <small>
+                                    dias restantes
+                                </small>
+
+                            </div>
+
+
+                            <div class="info">
+
+                                <strong>
+                                    25/12
+                                </strong>
+
+                                <small>
+                                    data do Natal
+                                </small>
+
+                            </div>
+
+
+                            <div class="info">
+
+                                <strong id="ano-natal">
+                                    —
+                                </strong>
+
+                                <small>
+                                    ano do Natal
+                                </small>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="presente">
+
+                            <div class="emoji">
+                                🎁
+                            </div>
+
+                            <p id="mensagem">
+
+                                Enquanto você espera,
+                                aproveite o ano.
+                                O Natal chega de qualquer jeito. ❤️
+
+                            </p>
+
+                        </div>
+
+
+                        <div class="rodape">
+
+                            Feito para quem pergunta
+                            "quanto falta para o Natal?"
+                            desde janeiro.
+
+                        </div>
+
+                    </section>
+
+                `;
+
+
+                resultado.innerHTML =
+                    html;
+
+
+                atualizar(natal);
+
+
+                intervalo =
+                    setInterval(
+                        () => atualizar(natal),
+                        1000
+                    );
+
+
+                status.textContent =
+                    "✓ Contagem iniciada. 🎄";
+
+
+            }
+
+
+            catch (e) {
+
+                console.error(e);
+
+                erro.style.display =
+                    "block";
+
+                erro.textContent =
+                    "ERRO:\n\n" +
+                    (
+                        e?.stack ||
+                        e?.message ||
+                        String(e)
+                    );
+
+                status.textContent =
+                    "❌ Falha ao gerar.";
+
+            }
+
+
+            finally {
+
+                botao.disabled =
+                    false;
+
+            }
+
+        }
+
+
+        // =========================================================
+        // INICIAR AUTOMATICAMENTE
+        // =========================================================
+
+        gerar();
+
+    </script>
+
+</body>
+
+</html>

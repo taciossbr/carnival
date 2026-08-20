@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Contadores</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+
+        body {
+
+            margin: 0;
+            padding: 20px;
+
+            font:
+                16px
+                system-ui,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            background: #f2f2f2;
+            color: #000;
+
+        }
+
+
+        /* =========================================================
+           CONFIGURAÇÃO
+           ========================================================= */
+
+        .config {
+
+            width: 100%;
+            max-width: 500px;
+
+            margin: 0 auto;
+            padding: 20px;
+
+            background: #fff;
+            border: 3px solid #000;
+
+        }
+
+
+        .config h1 {
+
+            margin: 0 0 20px;
+
+            padding-bottom: 10px;
+
+            border-bottom: 4px solid #000;
+
+            font-size: 24px;
+            text-align: center;
+
+        }
+
+
+        .campo {
+
+            margin-bottom: 18px;
+
+        }
+
+
+        .campo label {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            font-weight: bold;
+
+        }
+
+
+        .campo input,
+        .campo select,
+        .campo textarea {
+
+            width: 100%;
+
+            padding: 10px;
+
+            border: 2px solid #000;
+
+            background: #fff;
+            color: #000;
+
+            font-size: 16px;
+
+        }
+
+
+        button {
+
+            width: 100%;
+
+            padding: 14px;
+
+            border: 0;
+
+            background: #000;
+            color: #fff;
+
+            font-size: 18px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+        }
+
+
+        button:hover {
+            opacity: .8;
+        }
+
+
+        button:disabled {
+
+            opacity: .5;
+
+            cursor: wait;
+
+        }
+
+
+        /* =========================================================
+           STATUS / ERRO
+           ========================================================= */
+
+        #status {
+
+            margin-top: 15px;
+
+            font-family: monospace;
+            font-size: 13px;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        #erro {
+
+            display: none;
+
+            max-width: 900px;
+
+            margin: 20px auto;
+
+            padding: 15px;
+
+            border: 3px solid #900;
+
+            background: #fff;
+
+            color: #900;
+
+            font-family: monospace;
+
+            white-space: pre-wrap;
+
+        }
+
+
+        /* =========================================================
+           RESULTADO
+           ========================================================= */
+
+        #resultado {
+
+            width: 100%;
+
+            min-height: calc(100vh - 40px);
+
+        }
+
+
+        /* =========================================================
+           CONTADOR
+           ========================================================= */
+
+        .contador {
+
+            min-height: calc(100vh - 40px);
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 40px 20px;
+
+            background: var(--cor);
+
+            color: #fff;
+
+            transition:
+                background .3s ease;
+
+        }
+
+
+        .contador-conteudo {
+
+            width: 100%;
+            max-width: 900px;
+
+            text-align: center;
+
+        }
+
+
+        .contador-nome {
+
+            margin: 0;
+
+            font-size:
+                clamp(36px, 8vw, 80px);
+
+            line-height: 1;
+
+            font-weight: 900;
+
+            letter-spacing: -2px;
+
+            text-shadow:
+                0 3px 0 rgba(0,0,0,.15);
+
+        }
+
+
+        .contador-data {
+
+            margin-top: 18px;
+
+            font-size: 15px;
+
+            opacity: .8;
+
+        }
+
+
+        .contador-valores {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 12px;
+
+            margin-top: 45px;
+
+        }
+
+
+        .contador-unidade {
+
+            padding:
+                25px 10px;
+
+            border:
+                1px solid rgba(255,255,255,.25);
+
+            border-radius: 12px;
+
+            background:
+                rgba(255,255,255,.12);
+
+        }
+
+
+        .contador-numero {
+
+            font-size:
+                clamp(40px, 9vw, 90px);
+
+            line-height: 1;
+
+            font-weight: 900;
+
+            font-variant-numeric:
+                tabular-nums;
+
+        }
+
+
+        .contador-label {
+
+            margin-top: 10px;
+
+            font-size: 12px;
+
+            font-weight: bold;
+
+            text-transform: uppercase;
+
+            letter-spacing: 2px;
+
+            opacity: .75;
+
+        }
+
+
+        .contador-total {
+
+            margin-top: 35px;
+
+            font-size: 14px;
+
+            opacity: .7;
+
+        }
+
+
+        /* =========================================================
+           LISTA
+           ========================================================= */
+
+        .lista {
+
+            width: 100%;
+            max-width: 700px;
+
+            margin: 0 auto;
+
+            padding: 30px 0;
+
+        }
+
+
+        .lista h1 {
+
+            margin: 0 0 25px;
+
+            text-align: center;
+
+        }
+
+
+        .lista-item {
+
+            display: block;
+
+            margin-bottom: 10px;
+
+            padding: 18px 20px;
+
+            border-left:
+                8px solid var(--cor);
+
+            background: #fff;
+
+            color: #000;
+
+            text-decoration: none;
+
+            font-weight: bold;
+
+            box-shadow:
+                0 2px 5px rgba(0,0,0,.08);
+
+        }
+
+
+        .lista-item:hover {
+
+            transform:
+                translateX(4px);
+
+        }
+
+
+        /* =========================================================
+           FINALIZADO
+           ========================================================= */
+
+        .finalizado {
+
+            margin-top: 40px;
+
+            padding: 15px;
+
+            border-radius: 10px;
+
+            background:
+                rgba(255,255,255,.15);
+
+            font-weight: bold;
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVO
+           ========================================================= */
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 10px;
+            }
+
+
+            .contador {
+
+                min-height:
+                    calc(100vh - 20px);
+
+            }
+
+
+            .contador-valores {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+                margin-top: 30px;
+
+            }
+
+
+            .contador-unidade {
+
+                padding: 22px 8px;
+
+            }
+
+        }
+
+
+        /* =========================================================
+           IMPRESSÃO
+           ========================================================= */
+
+        @media print {
+
+            html,
+            body {
+
+                margin: 0;
+                padding: 0;
+
+                background: #fff;
+
+            }
+
+
+            .config,
+            #status,
+            #erro {
+
+                display: none !important;
+
+            }
+
+
+            #resultado {
+
+                margin: 0;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================================
+         CONFIGURAÇÃO
+
+         Cadastre os eventos abaixo.
+
+         Campos:
+
+         nome:
+             Nome que será mostrado.
+
+         slug:
+             Nome usado na URL/hash.
+             Exemplo: #natal
+
+         data:
+             Data/hora do evento.
+             Formato: YYYY-MM-DDTHH:mm:ss
+
+         cor:
+             Cor de fundo da página.
+
+         Exemplo:
+
+         {
+             nome: "Natal",
+             slug: "natal",
+             data: "2026-12-25T00:00:00",
+             cor: "#b91c1c"
+         }
+
+         ========================================================= -->
+
+    <section class="config">
+
+        <h1>
+            Contadores
+        </h1>
+
+
+        <div class="campo">
+
+            <label>
+                Eventos
+            </label>
+
+            <textarea
+                id="eventos"
+                rows="15"
+                spellcheck="false"
+            >[
+    {
+        "nome": "Natal",
+        "slug": "natal",
+        "data": "2026-12-25T00:00:00",
+        "cor": "#b91c1c"
+    },
+    {
+        "nome": "Ano Novo",
+        "slug": "ano-novo",
+        "data": "2027-01-01T00:00:00",
+        "cor": "#1d4ed8"
+    },
+    {
+        "nome": "Meu aniversário",
+        "slug": "aniversario",
+        "data": "2027-06-15T00:00:00",
+        "cor": "#7c3aed"
+    }
+]</textarea>
+
+        </div>
+
+
+        <button id="gerar">
+            GERAR
+        </button>
+
+
+        <div id="status"></div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ERRO
+         ========================================================= -->
+
+    <div id="erro"></div>
+
+
+    <!-- =========================================================
+         RESULTADO
+         ========================================================= -->
+
+    <div id="resultado"></div>
+
+
+    <script>
+
+        // =========================================================
+        // ELEMENTOS
+        // =========================================================
+
+        const botao =
+            document.getElementById("gerar");
+
+        const status =
+            document.getElementById("status");
+
+        const erro =
+            document.getElementById("erro");
+
+        const resultado =
+            document.getElementById("resultado");
+
+
+        // =========================================================
+        // ESTADO
+        // =========================================================
+
+        let eventos = [];
+
+        let intervalo = null;
+
+
+        // =========================================================
+        // PARÂMETROS
+        // =========================================================
+
+        function obterParametros() {
+
+            const texto =
+                document.getElementById(
+                    "eventos"
+                ).value;
+
+
+            return JSON.parse(texto);
+
+        }
+
+
+        // =========================================================
+        // FORMATAÇÃO
+        // =========================================================
+
+        function numero(valor) {
+
+            return String(valor)
+                .padStart(2, "0");
+
+        }
+
+
+        function escaparHTML(valor) {
+
+            const div =
+                document.createElement("div");
+
+            div.textContent =
+                String(valor);
+
+            return div.innerHTML;
+
+        }
+
+
+        // =========================================================
+        // ENCONTRAR EVENTO
+        // =========================================================
+
+        function obterEventoAtual() {
+
+            const slug =
+                location.hash
+                    .replace(/^#/, "")
+                    .trim();
+
+
+            if (!slug) {
+                return null;
+            }
+
+
+            return eventos.find(
+                evento =>
+                    evento.slug === slug
+            ) || null;
+
+        }
+
+
+        // =========================================================
+        // FORMATAR DATA
+        // =========================================================
+
+        function formatarData(data) {
+
+            return data.toLocaleString(
+                "pt-BR",
+                {
+                    dateStyle: "full",
+                    timeStyle: "short"
+                }
+            );
+
+        }
+
+
+        // =========================================================
+        // CONTADOR
+        // =========================================================
+
+        function calcularTempo(data) {
+
+            const agora =
+                new Date();
+
+            let restante =
+                data.getTime() -
+                agora.getTime();
+
+
+            if (restante <= 0) {
+
+                return null;
+
+            }
+
+
+            const segundo =
+                1000;
+
+            const minuto =
+                segundo * 60;
+
+            const hora =
+                minuto * 60;
+
+            const dia =
+                hora * 24;
+
+
+            const dias =
+                Math.floor(
+                    restante / dia
+                );
+
+            restante %= dia;
+
+
+            const horas =
+                Math.floor(
+                    restante / hora
+                );
+
+            restante %= hora;
+
+
+            const minutos =
+                Math.floor(
+                    restante / minuto
+                );
+
+            restante %= minuto;
+
+
+            const segundos =
+                Math.floor(
+                    restante / segundo
+                );
+
+
+            return {
+                dias,
+                horas,
+                minutos,
+                segundos
+            };
+
+        }
+
+
+        // =========================================================
+        // RENDERIZAR LISTA
+        // =========================================================
+
+        function renderizarLista() {
+
+            if (!eventos.length) {
+
+                resultado.innerHTML = `
+                    <div class="lista">
+                        <h1>Nenhum contador cadastrado.</h1>
+                    </div>
+                `;
+
+                return;
+
+            }
+
+
+            const itens =
+                eventos
+                    .map(
+                        evento => `
+
+                            <a
+                                class="lista-item"
+                                href="#${encodeURIComponent(
+                                    evento.slug
+                                )}"
+                                style="--cor: ${
+                                    escaparHTML(
+                                        evento.cor
+                                    )
+                                }"
+                            >
+                                ${escaparHTML(
+                                    evento.nome
+                                )}
+                            </a>
+
+                        `
+                    )
+                    .join("");
+
+
+            resultado.innerHTML = `
+
+                <div class="lista">
+
+                    <h1>
+                        Contadores
+                    </h1>
+
+                    ${itens}
+
+                </div>
+
+            `;
+
+        }
+
+
+        // =========================================================
+        // RENDERIZAR CONTADOR
+        // =========================================================
+
+        function renderizarContador(evento) {
+
+            const data =
+                new Date(evento.data);
+
+
+            if (
+                Number.isNaN(
+                    data.getTime()
+                )
+            ) {
+
+                throw new Error(
+                    `Data inválida para "${evento.nome}".`
+                );
+
+            }
+
+
+            resultado.innerHTML = `
+
+                <main
+                    class="contador"
+                    style="--cor: ${
+                        escaparHTML(evento.cor)
+                    }"
+                >
+
+                    <div class="contador-conteudo">
+
+                        <h1 class="contador-nome">
+                            ${escaparHTML(
+                                evento.nome
+                            )}
+                        </h1>
+
+
+                        <div class="contador-data">
+                            ${escaparHTML(
+                                formatarData(data)
+                            )}
+                        </div>
+
+
+                        <div class="contador-valores">
+
+                            <div class="contador-unidade">
+
+                                <div
+                                    class="contador-numero"
+                                    id="dias"
+                                >
+                                    00
+                                </div>
+
+                                <div class="contador-label">
+                                    Dias
+                                </div>
+
+                            </div>
+
+
+                            <div class="contador-unidade">
+
+                                <div
+                                    class="contador-numero"
+                                    id="horas"
+                                >
+                                    00
+                                </div>
+
+                                <div class="contador-label">
+                                    Horas
+                                </div>
+
+                            </div>
+
+
+                            <div class="contador-unidade">
+
+                                <div
+                                    class="contador-numero"
+                                    id="minutos"
+                                >
+                                    00
+                                </div>
+
+                                <div class="contador-label">
+                                    Minutos
+                                </div>
+
+                            </div>
+
+
+                            <div class="contador-unidade">
+
+                                <div
+                                    class="contador-numero"
+                                    id="segundos"
+                                >
+                                    00
+                                </div>
+
+                                <div class="contador-label">
+                                    Segundos
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="contador-total"
+                            id="total"
+                        ></div>
+
+                    </div>
+
+                </main>
+
+            `;
+
+
+            atualizarContador(evento);
+
+        }
+
+
+        // =========================================================
+        // ATUALIZAR CONTADOR
+        // =========================================================
+
+        function atualizarContador(evento) {
+
+            const data =
+                new Date(evento.data);
+
+
+            const tempo =
+                calcularTempo(data);
+
+
+            if (!tempo) {
+
+                document.getElementById(
+                    "dias"
+                ).textContent = "00";
+
+                document.getElementById(
+                    "horas"
+                ).textContent = "00";
+
+                document.getElementById(
+                    "minutos"
+                ).textContent = "00";
+
+                document.getElementById(
+                    "segundos"
+                ).textContent = "00";
+
+                document.getElementById(
+                    "total"
+                ).textContent =
+                    "🎉 Chegou o momento!";
+
+                return;
+
+            }
+
+
+            document.getElementById(
+                "dias"
+            ).textContent =
+                numero(tempo.dias);
+
+
+            document.getElementById(
+                "horas"
+            ).textContent =
+                numero(tempo.horas);
+
+
+            document.getElementById(
+                "minutos"
+            ).textContent =
+                numero(tempo.minutos);
+
+
+            document.getElementById(
+                "segundos"
+            ).textContent =
+                numero(tempo.segundos);
+
+
+            const total =
+                data.getTime() -
+                Date.now();
+
+
+            document.getElementById(
+                "total"
+            ).textContent =
+                `${Math.ceil(
+                    total / 86400000
+                )} dias restantes`;
+
+        }
+
+
+        // =========================================================
+        // ROUTER
+        // =========================================================
+
+        function renderizarRota() {
+
+            clearInterval(intervalo);
+
+            const evento =
+                obterEventoAtual();
+
+
+            if (!evento) {
+
+                renderizarLista();
+
+                return;
+
+            }
+
+
+            renderizarContador(evento);
+
+
+            intervalo =
+                setInterval(
+                    () => {
+
+                        atualizarContador(
+                            evento
+                        );
+
+                    },
+                    1000
+                );
+
+        }
+
+
+        // =========================================================
+        // GERAR
+        // =========================================================
+
+        botao.addEventListener(
+            "click",
+            gerar
+        );
+
+
+        function gerar() {
+
+            erro.style.display =
+                "none";
+
+            erro.textContent = "";
+
+            botao.disabled = true;
+
+
+            try {
+
+                status.textContent =
+                    "⚙️ Processando...";
+
+
+                eventos =
+                    obterParametros();
+
+
+                if (!Array.isArray(eventos)) {
+
+                    throw new Error(
+                        "Os eventos precisam ser um array JSON."
+                    );
+
+                }
+
+
+                const slugs =
+                    new Set();
+
+
+                eventos.forEach(
+                    evento => {
+
+                        if (
+                            !evento.nome ||
+                            !evento.slug ||
+                            !evento.data ||
+                            !evento.cor
+                        ) {
+
+                            throw new Error(
+                                "Cada evento precisa de nome, slug, data e cor."
+                            );
+
+                        }
+
+
+                        if (
+                            slugs.has(
+                                evento.slug
+                            )
+                        ) {
+
+                            throw new Error(
+                                `Slug duplicado: "${evento.slug}".`
+                            );
+
+                        }
+
+
+                        slugs.add(
+                            evento.slug
+                        );
+
+                    }
+                );
+
+
+                // =================================================
+                // OCULTAR CONFIGURAÇÃO
+                // =================================================
+
+                document
+                    .querySelector(".config")
+                    .style.display = "none";
+
+
+                renderizarRota();
+
+
+                status.textContent =
+                    "✓ Gerado com sucesso.";
+
+            }
+
+
+            catch (e) {
+
+                console.error(e);
+
+                erro.style.display =
+                    "block";
+
+                erro.textContent =
+                    "ERRO:\n\n" +
+                    (
+                        e?.stack ||
+                        e?.message ||
+                        String(e)
+                    );
+
+                status.textContent =
+                    "❌ Falha ao gerar.";
+
+            }
+
+
+            finally {
+
+                botao.disabled =
+                    false;
+
+            }
+
+        }
+
+
+        // =========================================================
+        // MUDANÇA DE HASH
+        // =========================================================
+
+        window.addEventListener(
+            "hashchange",
+            () => {
+
+                if (!eventos.length) {
+                    return;
+                }
+
+                renderizarRota();
+
+            }
+        );
+
+
+    </script>
+
+</body>
+
+</html>
