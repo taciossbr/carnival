@@ -1,0 +1,2275 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<title>Construtor de Tabelas</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f2f2f2;
+  color: #111;
+}
+
+body {
+  min-height: 100vh;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+
+/* =========================================
+   APP
+========================================= */
+
+.app {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+
+/* =========================================
+   CABEÇALHO
+========================================= */
+
+.header {
+  background: #111;
+  color: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.header p {
+  margin: 5px 0 0;
+  font-size: 12px;
+  opacity: .75;
+}
+
+
+/* =========================================
+   PAINEL
+========================================= */
+
+.panel {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 13px;
+  margin-bottom: 12px;
+}
+
+.panel-title {
+  font-size: 17px;
+  font-weight: bold;
+  margin: 0 0 12px;
+}
+
+
+/* =========================================
+   CAMPOS
+========================================= */
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.field input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #999;
+  border-radius: 7px;
+  padding: 0 11px;
+  background: #fff;
+  font-size: 15px;
+  outline: none;
+}
+
+.field input:focus {
+  border-color: #111;
+}
+
+
+/* =========================================
+   CONFIGURAÇÕES DAS COLUNAS
+========================================= */
+
+.column-config {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f7f7f7;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.column-config-title {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 7px;
+}
+
+.column-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.column-config-row input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  border: 1px solid #999;
+  border-radius: 7px;
+  padding: 0 10px;
+  background: #fff;
+  font-size: 15px;
+  outline: none;
+}
+
+.column-config-row input:focus {
+  border-color: #111;
+}
+
+.column-config-unit {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+
+/* =========================================
+   CHECKBOXES DOS CABEÇALHOS
+========================================= */
+
+.headers-config {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f7f7f7;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.headers-title {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 9px;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 35px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.checkbox-item input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #111;
+}
+
+
+/* =========================================
+   TABELA
+========================================= */
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+
+  border: 2px solid #111;
+  border-radius: 7px;
+
+  background: #fff;
+
+  margin-top: 12px;
+}
+
+.editor-table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+.editor-table td {
+  width: var(--column-width, 130px);
+  min-width: var(--column-width, 130px);
+
+  border: 2px solid #111;
+
+  padding: 0;
+  vertical-align: top;
+
+  background: #fff;
+}
+
+.editor-table td.black-column,
+.editor-table tr.black-row td {
+  background: #000;
+}
+
+.editor-table td.black-column textarea,
+.editor-table tr.black-row td textarea {
+  color: #fff;
+}
+
+.editor-table textarea {
+  display: block;
+
+  width: 100%;
+  min-height: 52px;
+
+  border: 0;
+  outline: none;
+  resize: vertical;
+
+  padding: 8px;
+
+  background: transparent;
+  color: #111;
+
+  font-size: 13px;
+  font-weight: bold;
+
+  line-height: 1.2;
+}
+
+.editor-table td.black-column textarea,
+.editor-table tr.black-row td textarea {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.editor-table td.black-column,
+.editor-table tr.black-row td {
+  width: auto;
+  min-width: 0;
+}
+
+.editor-table td.black-column textarea,
+.editor-table tr.black-row td textarea {
+  width: max-content;
+  min-width: 100%;
+}
+
+.editor-table textarea:focus {
+  box-shadow: inset 0 0 0 2px #555;
+}
+
+
+/* =========================================
+   CONTROLES
+========================================= */
+
+.table-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.btn {
+  min-height: 42px;
+
+  border: 1px solid #111;
+  border-radius: 7px;
+
+  padding: 9px 11px;
+
+  background: #111;
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.btn.secondary {
+  background: #fff;
+  color: #111;
+}
+
+.btn.danger {
+  background: #fff;
+  color: #c62828;
+  border-color: #c62828;
+}
+
+.btn:active {
+  transform: scale(.98);
+}
+
+
+/* =========================================
+   AÇÕES PRINCIPAIS
+========================================= */
+
+.main-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.main-actions .btn {
+  min-height: 46px;
+}
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+.status {
+  margin-top: 9px;
+  min-height: 17px;
+
+  font-size: 12px;
+  color: #666;
+}
+
+
+/* =========================================
+   TABELAS SALVAS
+========================================= */
+
+.saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.saved-card {
+  background: #fff;
+
+  border: 1px solid #ccc;
+  border-radius: 9px;
+
+  padding: 12px;
+}
+
+.saved-name {
+  font-size: 15px;
+  font-weight: bold;
+
+  word-break: break-word;
+}
+
+.saved-info {
+  margin-top: 4px;
+
+  color: #777;
+  font-size: 11px;
+}
+
+.saved-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 5px;
+
+  margin-top: 10px;
+}
+
+.saved-actions button {
+  min-height: 37px;
+
+  padding: 5px;
+
+  border: 1px solid #aaa;
+  border-radius: 6px;
+
+  background: #fff;
+
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.saved-actions .edit {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.saved-actions .delete {
+  color: #c62828;
+  border-color: #c62828;
+}
+
+.empty {
+  text-align: center;
+
+  background: #fff;
+
+  border: 1px dashed #aaa;
+  border-radius: 8px;
+
+  padding: 25px 15px;
+
+  color: #777;
+  font-size: 13px;
+}
+
+
+/* =========================================
+   RESULTADO
+========================================= */
+
+#printArea {
+  display: none;
+}
+
+.print-title {
+  width: 100%;
+
+  margin-bottom: 2mm;
+
+  text-align: center;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  line-height: 1.2;
+
+  word-break: break-word;
+}
+
+.print-table {
+  width: max-content;
+
+  border-collapse: collapse;
+  table-layout: fixed;
+
+  font-size: 9px;
+
+  font-weight: bold;
+}
+
+.print-table td {
+  border: 2px solid #000;
+
+  padding: 1.1mm;
+
+  vertical-align: middle;
+
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  line-height: 1.1;
+
+  font-weight: bold;
+
+  width: var(--print-column-width, 20mm);
+}
+
+/* Primeira coluna */
+
+.print-table td.black-column {
+  width: auto;
+  white-space: nowrap;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Primeira linha */
+
+.print-table tr.black-row td {
+  background: #000;
+  color: #fff;
+}
+
+/* Primeira linha + primeira coluna */
+
+.print-table tr.black-row td.black-column {
+  background: #000;
+  color: #fff;
+}
+
+
+/* =========================================
+   MODO IMPRESSÃO
+========================================= */
+
+body.print-mode {
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  background: #fff !important;
+
+  overflow-x: hidden;
+}
+
+body.print-mode .app {
+  display: none !important;
+}
+
+body.print-mode #printArea {
+
+  display: block !important;
+
+  margin: 0 !important;
+
+  padding: 2mm;
+
+  background: #fff !important;
+
+  color: #000;
+}
+
+
+/* =========================================
+   DESKTOP
+========================================= */
+
+@media (min-width: 700px) {
+
+  .app {
+    padding: 25px;
+  }
+
+  .fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .table-controls {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .main-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .saved-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<main class="app">
+
+  <header class="header">
+
+    <h1>
+      Construtor de Tabelas
+    </h1>
+
+    <p>
+      Crie tabelas para impressão térmica de 48 mm.
+    </p>
+
+  </header>
+
+
+  <!-- ====================================
+       EDITOR
+  ===================================== -->
+
+  <section class="panel">
+
+    <h2
+      class="panel-title"
+      id="editorTitle"
+    >
+      Nova tabela
+    </h2>
+
+
+    <div class="fields">
+
+      <div class="field">
+
+        <label for="tableName">
+          Nome da tabela
+        </label>
+
+        <input
+          id="tableName"
+          type="text"
+          placeholder="Ex.: Produtos"
+        >
+
+      </div>
+
+
+      <div class="field">
+
+        <label for="tableTitle">
+          Título da impressão
+        </label>
+
+        <input
+          id="tableTitle"
+          type="text"
+          placeholder="Ex.: PRODUTOS"
+        >
+
+      </div>
+
+    </div>
+
+
+    <!-- ==================================
+         TAMANHO DAS COLUNAS
+    =================================== -->
+
+    <div class="column-config">
+
+      <div class="column-config-title">
+        Tamanho das colunas
+      </div>
+
+      <div class="column-config-row">
+
+        <input
+          id="columnWidth"
+          type="number"
+          min="1"
+          step="1"
+          value="20"
+          placeholder="20"
+        >
+
+        <span class="column-config-unit">
+          mm
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- ==================================
+         CABEÇALHOS
+    =================================== -->
+
+    <div class="headers-config">
+
+      <div class="headers-title">
+        Cabeçalhos
+      </div>
+
+      <div class="checkbox-list">
+
+        <label class="checkbox-item">
+
+          <input
+            type="checkbox"
+            id="firstColumnBlack"
+          >
+
+          <span>
+            1ª coluna preta
+          </span>
+
+        </label>
+
+
+        <label class="checkbox-item">
+
+          <input
+            type="checkbox"
+            id="firstRowBlack"
+          >
+
+          <span>
+            1ª linha preta
+          </span>
+
+        </label>
+
+      </div>
+
+    </div>
+
+
+    <!-- ==================================
+         TABELA EDITÁVEL
+    =================================== -->
+
+    <div class="table-scroll">
+
+      <table class="editor-table">
+
+        <tbody id="editorTableBody"></tbody>
+
+      </table>
+
+    </div>
+
+
+    <!-- ==================================
+         CONTROLES
+    =================================== -->
+
+    <div class="table-controls">
+
+      <button
+        class="btn secondary"
+        onclick="adicionarColuna()"
+      >
+        + Coluna
+      </button>
+
+      <button
+        class="btn secondary"
+        onclick="removerColuna()"
+      >
+        − Coluna
+      </button>
+
+      <button
+        class="btn secondary"
+        onclick="adicionarLinha()"
+      >
+        + Linha
+      </button>
+
+      <button
+        class="btn secondary"
+        onclick="removerLinha()"
+      >
+        − Linha
+      </button>
+
+    </div>
+
+
+    <!-- ==================================
+         AÇÕES
+    =================================== -->
+
+    <div class="main-actions">
+
+      <button
+        class="btn"
+        onclick="salvarTabela()"
+      >
+        💾 Salvar
+      </button>
+
+      <button
+        class="btn"
+        onclick="imprimirAtual()"
+      >
+        🖨️ Imprimir
+      </button>
+
+    </div>
+
+
+    <div
+      class="status"
+      id="saveStatus"
+    >
+      Nenhuma alteração salva.
+    </div>
+
+  </section>
+
+
+  <!-- ====================================
+       TABELAS SALVAS
+  ===================================== -->
+
+  <section class="panel">
+
+    <h2 class="panel-title">
+      Tabelas salvas
+    </h2>
+
+    <div
+      class="saved-list"
+      id="savedList"
+    ></div>
+
+  </section>
+
+
+</main>
+
+
+<!-- ======================================
+     ÁREA DE IMPRESSÃO
+======================================= -->
+
+<div id="printArea"></div>
+
+
+<script>
+
+
+const STORAGE_KEY =
+  "construtor-tabelas-termica-v3";
+
+
+let tabelas = [];
+
+let tabelaAtual = null;
+
+
+/* =========================================
+   INICIALIZAÇÃO
+========================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    carregarTabelas();
+
+    if (tabelas.length > 0) {
+
+      carregarTabela(
+        tabelas[0].id
+      );
+
+    } else {
+
+      novaTabela();
+
+    }
+
+    renderizarLista();
+
+  }
+);
+
+
+/* =========================================
+   STORAGE
+========================================= */
+
+function carregarTabelas() {
+
+  try {
+
+    const dados =
+      localStorage.getItem(
+        STORAGE_KEY
+      );
+
+    tabelas =
+      dados
+        ? JSON.parse(dados)
+        : [];
+
+    if (!Array.isArray(tabelas)) {
+
+      tabelas = [];
+
+    }
+
+  } catch (erro) {
+
+    console.error(erro);
+
+    tabelas = [];
+
+  }
+
+}
+
+
+function salvarNoStorage() {
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(tabelas)
+  );
+
+}
+
+
+/* =========================================
+   ID
+========================================= */
+
+function gerarId() {
+
+  return (
+    Date.now().toString(36) +
+    Math.random()
+      .toString(36)
+      .substring(2, 8)
+  );
+
+}
+
+
+/* =========================================
+   NOVA TABELA
+========================================= */
+
+function novaTabela() {
+
+  tabelaAtual = {
+
+    id: gerarId(),
+
+    name: "Nova tabela",
+
+    title: "",
+
+    firstColumnBlack: false,
+
+    firstRowBlack: false,
+
+    columnWidth: 20,
+
+    rows: [
+
+      ["", "", ""],
+
+      ["", "", ""],
+
+      ["", "", ""],
+
+      ["", "", ""]
+
+    ]
+
+  };
+
+
+  preencherEditor();
+
+  document
+    .getElementById("editorTitle")
+    .textContent =
+    "Nova tabela";
+
+
+  atualizarStatus(
+    "Nova tabela criada."
+  );
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+/* =========================================
+   CARREGAR
+========================================= */
+
+function carregarTabela(id) {
+
+  const tabela =
+    tabelas.find(
+      tabela =>
+        tabela.id === id
+    );
+
+  if (!tabela) return;
+
+
+  tabelaAtual =
+    JSON.parse(
+      JSON.stringify(tabela)
+    );
+
+
+  /*
+    Compatibilidade com tabelas antigas.
+    Não altera o que já está salvo.
+  */
+
+  tabelaAtual.firstColumnBlack =
+    !!tabelaAtual.firstColumnBlack;
+
+  tabelaAtual.firstRowBlack =
+    !!tabelaAtual.firstRowBlack;
+
+  if (
+    typeof tabelaAtual.columnWidth !== "number" ||
+    tabelaAtual.columnWidth <= 0
+  ) {
+
+    tabelaAtual.columnWidth = 20;
+
+  }
+
+
+  preencherEditor();
+
+
+  document
+    .getElementById("editorTitle")
+    .textContent =
+    "Editando: " +
+    tabelaAtual.name;
+
+
+  atualizarStatus(
+    "Tabela carregada."
+  );
+
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+/* =========================================
+   PREENCHER EDITOR
+========================================= */
+
+function preencherEditor() {
+
+  document
+    .getElementById("tableName")
+    .value =
+    tabelaAtual.name || "";
+
+
+  document
+    .getElementById("tableTitle")
+    .value =
+    tabelaAtual.title || "";
+
+
+  document
+    .getElementById("columnWidth")
+    .value =
+    tabelaAtual.columnWidth || 20;
+
+
+  document
+    .getElementById("firstColumnBlack")
+    .checked =
+    tabelaAtual.firstColumnBlack;
+
+
+  document
+    .getElementById("firstRowBlack")
+    .checked =
+    tabelaAtual.firstRowBlack;
+
+
+  renderizarEditor();
+
+}
+
+
+/* =========================================
+   RENDERIZAR EDITOR
+========================================= */
+
+function renderizarEditor() {
+
+  const tbody =
+    document.getElementById(
+      "editorTableBody"
+    );
+
+
+  tbody.innerHTML = "";
+
+
+  const table =
+    tbody.closest(
+      ".editor-table"
+    );
+
+
+  table.style.setProperty(
+    "--column-width",
+    `${tabelaAtual.columnWidth || 20}mm`
+  );
+
+
+  tabelaAtual.rows.forEach(
+    (linha, rowIndex) => {
+
+      const tr =
+        document.createElement(
+          "tr"
+        );
+
+
+      /*
+        CORREÇÃO:
+        A classe black-row fica no TR.
+        O CSS agora pinta os TDs dentro dele.
+      */
+
+      if (
+        tabelaAtual.firstRowBlack &&
+        rowIndex === 0
+      ) {
+
+        tr.classList.add(
+          "black-row"
+        );
+
+      }
+
+
+      linha.forEach(
+        (valor, colIndex) => {
+
+          const td =
+            document.createElement(
+              "td"
+            );
+
+
+          if (
+            tabelaAtual.firstColumnBlack &&
+            colIndex === 0
+          ) {
+
+            td.classList.add(
+              "black-column"
+            );
+
+          }
+
+
+          const textarea =
+            document.createElement(
+              "textarea"
+            );
+
+
+          textarea.value =
+            valor || "";
+
+
+          textarea.placeholder =
+            "Digite aqui";
+
+
+          textarea.addEventListener(
+            "input",
+            () => {
+
+              tabelaAtual.rows[
+                rowIndex
+              ][colIndex] =
+                textarea.value;
+
+
+              atualizarStatus(
+                "Alterações não salvas."
+              );
+
+            }
+          );
+
+
+          td.appendChild(
+            textarea
+          );
+
+
+          tr.appendChild(td);
+
+        }
+      );
+
+
+      tbody.appendChild(tr);
+
+    }
+  );
+
+}
+
+
+/* =========================================
+   TAMANHO DAS COLUNAS
+========================================= */
+
+document
+  .getElementById("columnWidth")
+  .addEventListener(
+    "input",
+    event => {
+
+      let valor =
+        parseFloat(
+          event.target.value
+        );
+
+
+      if (
+        !Number.isFinite(valor) ||
+        valor <= 0
+      ) {
+
+        return;
+
+      }
+
+
+      tabelaAtual.columnWidth =
+        valor;
+
+
+      renderizarEditor();
+
+
+      atualizarStatus(
+        "Tamanho das colunas alterado."
+      );
+
+    }
+  );
+
+
+/* =========================================
+   CHECKBOX - PRIMEIRA COLUNA
+========================================= */
+
+document
+  .getElementById(
+    "firstColumnBlack"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      tabelaAtual.firstColumnBlack =
+        event.target.checked;
+
+
+      renderizarEditor();
+
+
+      atualizarStatus(
+        event.target.checked
+          ? "1ª coluna marcada como cabeçalho."
+          : "1ª coluna normal."
+      );
+
+    }
+  );
+
+
+/* =========================================
+   CHECKBOX - PRIMEIRA LINHA
+========================================= */
+
+document
+  .getElementById(
+    "firstRowBlack"
+  )
+  .addEventListener(
+    "change",
+    event => {
+
+      tabelaAtual.firstRowBlack =
+        event.target.checked;
+
+
+      renderizarEditor();
+
+
+      atualizarStatus(
+        event.target.checked
+          ? "1ª linha marcada como cabeçalho."
+          : "1ª linha normal."
+      );
+
+    }
+  );
+
+
+/* =========================================
+   CAMPOS
+========================================= */
+
+document
+  .getElementById("tableName")
+  .addEventListener(
+    "input",
+    event => {
+
+      tabelaAtual.name =
+        event.target.value;
+
+      atualizarStatus(
+        "Alterações não salvas."
+      );
+
+    }
+  );
+
+
+document
+  .getElementById("tableTitle")
+  .addEventListener(
+    "input",
+    event => {
+
+      tabelaAtual.title =
+        event.target.value;
+
+      atualizarStatus(
+        "Alterações não salvas."
+      );
+
+    }
+  );
+
+
+/* =========================================
+   COLUNA
+========================================= */
+
+function adicionarColuna() {
+
+  tabelaAtual.rows.forEach(
+    linha => linha.push("")
+  );
+
+
+  renderizarEditor();
+
+
+  atualizarStatus(
+    "Coluna adicionada."
+  );
+
+}
+
+
+function removerColuna() {
+
+  const quantidade =
+    tabelaAtual.rows[0].length;
+
+
+  if (quantidade <= 1) {
+
+    alert(
+      "A tabela precisa ter pelo menos uma coluna."
+    );
+
+    return;
+
+  }
+
+
+  tabelaAtual.rows.forEach(
+    linha => linha.pop()
+  );
+
+
+  renderizarEditor();
+
+
+  atualizarStatus(
+    "Coluna removida."
+  );
+
+}
+
+
+/* =========================================
+   LINHA
+========================================= */
+
+function adicionarLinha() {
+
+  const quantidade =
+    tabelaAtual.rows[0].length;
+
+
+  tabelaAtual.rows.push(
+    Array(
+      quantidade
+    ).fill("")
+  );
+
+
+  renderizarEditor();
+
+
+  atualizarStatus(
+    "Linha adicionada."
+  );
+
+}
+
+
+function removerLinha() {
+
+  if (
+    tabelaAtual.rows.length <= 1
+  ) {
+
+    alert(
+      "A tabela precisa ter pelo menos uma linha."
+    );
+
+    return;
+
+  }
+
+
+  tabelaAtual.rows.pop();
+
+
+  renderizarEditor();
+
+
+  atualizarStatus(
+    "Linha removida."
+  );
+
+}
+
+
+/* =========================================
+   SALVAR
+========================================= */
+
+function salvarTabela() {
+
+  tabelaAtual.name =
+    document
+      .getElementById("tableName")
+      .value
+      .trim() ||
+    "Tabela sem nome";
+
+
+  tabelaAtual.title =
+    document
+      .getElementById("tableTitle")
+      .value
+      .trim();
+
+
+  tabelaAtual.firstColumnBlack =
+    document
+      .getElementById(
+        "firstColumnBlack"
+      )
+      .checked;
+
+
+  tabelaAtual.firstRowBlack =
+    document
+      .getElementById(
+        "firstRowBlack"
+      )
+      .checked;
+
+
+  const largura =
+    parseFloat(
+      document
+        .getElementById("columnWidth")
+        .value
+    );
+
+
+  if (
+    Number.isFinite(largura) &&
+    largura > 0
+  ) {
+
+    tabelaAtual.columnWidth =
+      largura;
+
+  }
+
+
+  tabelaAtual.updatedAt =
+    new Date().toISOString();
+
+
+  const indice =
+    tabelas.findIndex(
+      tabela =>
+        tabela.id ===
+        tabelaAtual.id
+    );
+
+
+  const copia =
+    JSON.parse(
+      JSON.stringify(
+        tabelaAtual
+      )
+    );
+
+
+  if (indice >= 0) {
+
+    tabelas[indice] =
+      copia;
+
+  } else {
+
+    tabelas.unshift(
+      copia
+    );
+
+  }
+
+
+  salvarNoStorage();
+
+
+  tabelaAtual =
+    JSON.parse(
+      JSON.stringify(
+        copia
+      )
+    );
+
+
+  renderizarLista();
+
+
+  document
+    .getElementById("editorTitle")
+    .textContent =
+    "Editando: " +
+    tabelaAtual.name;
+
+
+  atualizarStatus(
+    "✓ Tabela salva."
+  );
+
+}
+
+
+/* =========================================
+   LISTA
+========================================= */
+
+function renderizarLista() {
+
+  const container =
+    document.getElementById(
+      "savedList"
+    );
+
+
+  container.innerHTML = "";
+
+
+  if (tabelas.length === 0) {
+
+    container.innerHTML = `
+      <div class="empty">
+        Nenhuma tabela salva ainda.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  tabelas.forEach(
+    tabela => {
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+
+      card.className =
+        "saved-card";
+
+
+      const name =
+        document.createElement(
+          "div"
+        );
+
+
+      name.className =
+        "saved-name";
+
+
+      name.textContent =
+        tabela.name ||
+        "Tabela sem nome";
+
+
+      const info =
+        document.createElement(
+          "div"
+        );
+
+
+      info.className =
+        "saved-info";
+
+
+      const linhas =
+        tabela.rows.length;
+
+
+      const colunas =
+        tabela.rows[0]
+          ? tabela.rows[0].length
+          : 0;
+
+
+      const cabecalhos = [];
+
+
+      if (
+        tabela.firstColumnBlack
+      ) {
+
+        cabecalhos.push(
+          "1ª coluna"
+        );
+
+      }
+
+
+      if (
+        tabela.firstRowBlack
+      ) {
+
+        cabecalhos.push(
+          "1ª linha"
+        );
+
+      }
+
+
+      info.textContent =
+        `${linhas} linhas × ${colunas} colunas` +
+        (
+          cabecalhos.length
+            ? " • Cabeçalho: " +
+              cabecalhos.join(" + ")
+            : ""
+        );
+
+
+      const actions =
+        document.createElement(
+          "div"
+        );
+
+
+      actions.className =
+        "saved-actions";
+
+
+      const editar =
+        criarBotao(
+          "✏️ Editar",
+          "edit",
+          () =>
+            carregarTabela(
+              tabela.id
+            )
+        );
+
+
+      const duplicar =
+        criarBotao(
+          "📄 Copiar",
+          "",
+          () =>
+            duplicarTabela(
+              tabela.id
+            )
+        );
+
+
+      const imprimir =
+        criarBotao(
+          "🖨️ Imprimir",
+          "",
+          () => {
+
+            carregarTabela(
+              tabela.id
+            );
+
+
+            setTimeout(
+              () => {
+
+                imprimirAtual();
+
+              },
+              30
+            );
+
+          }
+        );
+
+
+      const excluir =
+        criarBotao(
+          "🗑️ Excluir",
+          "delete",
+          () =>
+            excluirTabela(
+              tabela.id
+            )
+        );
+
+
+      actions.appendChild(
+        editar
+      );
+
+      actions.appendChild(
+        duplicar
+      );
+
+      actions.appendChild(
+        imprimir
+      );
+
+      actions.appendChild(
+        excluir
+      );
+
+
+      card.appendChild(
+        name
+      );
+
+      card.appendChild(
+        info
+      );
+
+      card.appendChild(
+        actions
+      );
+
+
+      container.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+function criarBotao(
+  texto,
+  classe,
+  funcao
+) {
+
+  const button =
+    document.createElement(
+      "button"
+    );
+
+
+  button.textContent =
+    texto;
+
+
+  if (classe) {
+
+    button.classList.add(
+      classe
+    );
+
+  }
+
+
+  button.onclick =
+    funcao;
+
+
+  return button;
+
+}
+
+
+/* =========================================
+   DUPLICAR
+========================================= */
+
+function duplicarTabela(id) {
+
+  const original =
+    tabelas.find(
+      tabela =>
+        tabela.id === id
+    );
+
+
+  if (!original) return;
+
+
+  const copia =
+    JSON.parse(
+      JSON.stringify(
+        original
+      )
+    );
+
+
+  copia.id =
+    gerarId();
+
+
+  copia.name =
+    "Cópia de " +
+    original.name;
+
+
+  copia.updatedAt =
+    new Date().toISOString();
+
+
+  tabelas.unshift(
+    copia
+  );
+
+
+  salvarNoStorage();
+
+
+  renderizarLista();
+
+
+  carregarTabela(
+    copia.id
+  );
+
+}
+
+
+/* =========================================
+   EXCLUIR
+========================================= */
+
+function excluirTabela(id) {
+
+  const tabela =
+    tabelas.find(
+      tabela =>
+        tabela.id === id
+    );
+
+
+  if (!tabela) return;
+
+
+  if (
+    !confirm(
+      `Excluir "${tabela.name}"?`
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  tabelas =
+    tabelas.filter(
+      tabela =>
+        tabela.id !== id
+    );
+
+
+  salvarNoStorage();
+
+
+  renderizarLista();
+
+
+  if (
+    tabelaAtual &&
+    tabelaAtual.id === id
+  ) {
+
+    if (tabelas.length) {
+
+      carregarTabela(
+        tabelas[0].id
+      );
+
+    } else {
+
+      novaTabela();
+
+    }
+
+  }
+
+}
+
+
+/* =========================================
+   ESCAPAR HTML
+========================================= */
+
+function escapeHtml(text) {
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+
+  div.textContent =
+    text;
+
+
+  return div.innerHTML
+    .replace(
+      /\n/g,
+      "<br>"
+    );
+
+}
+
+
+/* =========================================
+   GERAR RESULTADO
+========================================= */
+
+function gerarResultadoHTML() {
+
+  if (!tabelaAtual) {
+    return "";
+  }
+
+
+  let html = "";
+
+
+  const titulo =
+    tabelaAtual.title ||
+    tabelaAtual.name ||
+    "";
+
+
+
+
+
+  const largura =
+    Number.isFinite(
+      tabelaAtual.columnWidth
+    ) &&
+    tabelaAtual.columnWidth > 0
+      ? tabelaAtual.columnWidth
+      : 20;
+
+
+  html += `
+    <table
+      class="print-table"
+      style="--print-column-width:${largura}mm"
+    >
+      <tbody>
+  `;
+    if (titulo) {
+
+        html += `
+        <tr class="print-title">
+            <td colspan=${tabelaAtual.rows[0].length} border=0>
+                ${escapeHtml(titulo)}
+            </td>
+        </tr>
+        `;
+
+    }
+
+
+  tabelaAtual.rows.forEach(
+    (linha, rowIndex) => {
+
+      const classeLinha =
+        tabelaAtual.firstRowBlack &&
+        rowIndex === 0
+          ? "black-row"
+          : "";
+
+
+      html += `
+        <tr class="${classeLinha}">
+      `;
+
+
+      linha.forEach(
+        (valor, colIndex) => {
+
+          const classeColuna =
+            tabelaAtual.firstColumnBlack &&
+            colIndex === 0
+              ? "black-column"
+              : "";
+
+
+          html += `
+            <td class="${classeColuna}">
+              ${escapeHtml(
+                valor || ""
+              )}
+            </td>
+          `;
+
+        }
+      );
+
+
+      html += `
+        </tr>
+      `;
+
+    }
+  );
+
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+
+  return html;
+
+}
+
+
+/* =========================================
+   IMPRIMIR DIRETO
+========================================= */
+
+function imprimirAtual() {
+
+  tabelaAtual.name =
+    document
+      .getElementById("tableName")
+      .value
+      .trim() ||
+    "Tabela sem nome";
+
+
+  tabelaAtual.title =
+    document
+      .getElementById("tableTitle")
+      .value
+      .trim();
+
+
+  tabelaAtual.firstColumnBlack =
+    document
+      .getElementById(
+        "firstColumnBlack"
+      )
+      .checked;
+
+
+  tabelaAtual.firstRowBlack =
+    document
+      .getElementById(
+        "firstRowBlack"
+      )
+      .checked;
+
+
+  const largura =
+    parseFloat(
+      document
+        .getElementById("columnWidth")
+        .value
+    );
+
+
+  if (
+    Number.isFinite(largura) &&
+    largura > 0
+  ) {
+
+    tabelaAtual.columnWidth =
+      largura;
+
+  }
+
+
+  /*
+    Atualiza a tabela salva antes
+    de entrar no modo impressão.
+  */
+
+  const indice =
+    tabelas.findIndex(
+      tabela =>
+        tabela.id ===
+        tabelaAtual.id
+    );
+
+
+  if (indice >= 0) {
+
+    tabelas[indice] =
+      JSON.parse(
+        JSON.stringify(
+          tabelaAtual
+        )
+      );
+
+    salvarNoStorage();
+
+  }
+
+
+  document.getElementById(
+    "printArea"
+  ).innerHTML =
+    gerarResultadoHTML();
+
+
+  document.body.classList.add(
+    "print-mode"
+  );
+
+
+  window.scrollTo(
+    0,
+    0
+  );
+
+}
+
+
+/* =========================================
+   SAIR DO MODO IMPRESSÃO
+========================================= */
+
+function sairModoImpressao() {
+
+  document.body.classList.remove(
+    "print-mode"
+  );
+
+
+  document.getElementById(
+    "printArea"
+  ).innerHTML = "";
+
+
+  window.scrollTo(
+    0,
+    0
+  );
+
+}
+
+
+/* =========================================
+   ESC
+========================================= */
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    if (
+      event.key === "Escape" &&
+      document.body.classList.contains(
+        "print-mode"
+      )
+    ) {
+
+      sairModoImpressao();
+
+    }
+
+  }
+);
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+function atualizarStatus(texto) {
+
+  document.getElementById(
+    "saveStatus"
+  ).textContent =
+    texto;
+
+}
+
+</script>
+
+</body>
+</html>
+
