@@ -18,20 +18,26 @@ def clean_dist():
     DIST_DIR.mkdir(parents=True)
 
 
-def build_simple_tool(tool_file: Path):
-    """Copia uma tool HTML simples diretamente para dist/."""
-    output = DIST_DIR / tool_file.name
-
+def build_simple_tool(tool_file: Path, relative_path: Path):
+    """Copia uma tool HTML simples para dist/ mantendo a estrutura de subpastas."""
+    # relative_path representa o caminho a partir de TOOLS_DIR
+    target_dir = DIST_DIR / relative_path.parent
+    target_dir.mkdir(parents=True, exist_ok=True)
+    
+    output = target_dir / tool_file.name
     shutil.copy2(tool_file, output)
+
+    # Caminho relativo para o link no index (ex: subpasta/tool.html)
+    relative_file = relative_path.with_suffix(".html")
 
     return {
         "name": tool_file.stem,
-        "file": output.name,
+        "file": str(relative_file).replace("\\", "/"),
     }
 
 
-def build_complex_tool(tool_dir: Path):
-    """Executa o build da tool e copia o HTML gerado para dist/."""
+def build_complex_tool(tool_dir: Path, relative_path: Path):
+    """Executa o build da tool complexa e copia o HTML gerado para dist/ mantendo as subpastas."""
     build_script = tool_dir / "build.py"
 
     if not build_script.exists():
@@ -55,35 +61,58 @@ def build_complex_tool(tool_dir: Path):
             f"O build de '{tool_dir.name}' não gerou {output}"
         )
 
-    # O nome público é o nome do diretório da tool.
-    final_output = DIST_DIR / f"{tool_dir.name}.html"
+    # Cria a estrutura correspondente em dist/
+    target_dir = DIST_DIR / relative_path
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    # O arquivo final dentro da pasta de distribuição da tool
+    final_output = target_dir / "tool.html"
 
     shutil.copy2(output, final_output)
 
+    # Caminho relativo para o link no index (ex: subpasta/nome-da-tool/tool.html)
+    relative_file = relative_path / "tool.html"
+
     return {
         "name": tool_dir.name,
-        "file": final_output.name,
+        "file": str(relative_file).replace("\\", "/"),
     }
 
 
-def build_tools():
-    """Encontra e processa todas as ferramentas."""
+def process_directory(current_dir: Path):
+    """Varre diretórios de forma recursiva buscando tools simples ou complexas."""
     tools = []
 
-    for entry in sorted(TOOLS_DIR.iterdir(), key=lambda p: p.name.lower()):
-        # Ignora arquivos/diretórios ocultos.
+    for entry in sorted(current_dir.iterdir(), key=lambda p: p.name.lower()):
+        # Ignora arquivos/diretórios ocultos
         if entry.name.startswith("."):
             continue
 
-        # Tool simples: tools/foo.html
-        if entry.is_file() and entry.suffix.lower() == ".html":
-            tools.append(build_simple_tool(entry))
+        relative_path = entry.relative_to(TOOLS_DIR)
 
-        # Tool complexa: tools/foo/
+        # Tool simples (.html)
+        if entry.is_file() and entry.suffix.lower() == ".html":
+            tools.append(build_simple_tool(entry, relative_path))
+
+        # Diretório
         elif entry.is_dir():
-            tools.append(build_complex_tool(entry))
+            build_script = entry / "build.py"
+            
+            if build_script.exists():
+                # É uma tool complexa (possui build.py)
+                tools.append(build_complex_tool(entry, relative_path))
+            else:
+                # É apenas uma subpasta comum, entra nela recursivamente
+                tools.extend(process_directory(entry))
 
     return tools
+
+
+def build_tools():
+    """Encontra e processa todas as ferramentas a partir da raiz de tools."""
+    if not TOOLS_DIR.exists():
+        return []
+    return process_directory(TOOLS_DIR)
 
 
 def generate_index(tools):
