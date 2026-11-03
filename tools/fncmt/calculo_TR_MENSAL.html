@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Correção por TR</title>
+    <style>
+        :root {
+            --primary: #1f4e78;
+            --primary-dark: #123352;
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #d9d9d9;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 980px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-top: 0;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+            padding: 20px;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .metric-card.highlight-vigente {
+            background: #e2efda;
+            border-color: #385723;
+        }
+        .metric-card.highlight-mix {
+            background: #eef2f7;
+            border-color: var(--primary);
+        }
+        .metric-card.highlight-ref {
+            background: #fdf2e9;
+            border-color: #e67e22;
+        }
+        .metric-card h3 {
+            margin: 0 0 5px 0;
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
+        }
+        .metric-card .value {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .highlight-vigente .value { color: #385723; }
+        .highlight-ref .value { color: #d35400; }
+        .form-group {
+            background: #eef2f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+        .result-container {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        @media(max-width: 768px) {
+            .result-container { grid-template-columns: 1fr; }
+        }
+        .result-box {
+            padding: 15px;
+            background: #e2efda;
+            border: 1px solid #c6e0b4;
+            border-radius: 8px;
+        }
+        .result-box.mix-box {
+            background: #eef2f7;
+            border-color: #b4c6e7;
+        }
+        .result-box h4 {
+            margin: 0 0 10px 0;
+            color: #385723;
+        }
+        .result-box.mix-box h4 {
+            color: var(--primary);
+        }
+        .result-box.max-box {
+            background: #fdf2e9;
+            border-color: #f5cba7;
+        }
+        .result-box.max-box h4 { color: #d35400; }
+        .result-box.average-box {
+            background: #f8f9fa;
+            border-color: var(--border-color);
+        }
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        .comparison-box {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: none;
+        }
+        .comparison-box h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        .comparison-box .result-row {
+            justify-content: flex-start;
+            gap: 40px;
+            margin: 0 64px 10px 32px;
+        }
+        .comparison-box .result-row span {
+            flex: 0 1 320px;
+        }
+        .comparison-box .result-row strong {
+            white-space: nowrap;
+        }
+        .cors-alert {
+            font-size: 11px;
+            color: #856404;
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 6px 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📊 Simulador de Correção por TR</h1>
+    
+    <div id="loading" class="loading">Buscando taxa TR vigente do Banco Central...</div>
+
+    <div id="app-content" style="display: none;">
+        <div id="cors-warning" class="cors-alert">
+            ⚠️ <strong>Aviso CORS:</strong> Não foi possível acessar a API direta do BCB. Utilizando dados via servidor de contingência.
+        </div>
+
+        <!-- Relatório Técnico Histórico -->
+        <h3>Relatório Técnico TR</h3>
+        <div class="card-grid">
+            <div class="metric-card">
+                <h3>Média Histórica (25a)</h3>
+                <div class="value">0.11091%</div>
+            </div>
+            <div class="metric-card">
+                <h3>Média Recente (10a)</h3>
+                <div class="value">0.07299%</div>
+            </div>
+            <div class="metric-card">
+                <h3>Mediana</h3>
+                <div class="value">0.10045%</div>
+            </div>
+            <div class="metric-card">
+                <h3>Máximo Histórico</h3>
+                <div class="value" style="font-size: 14px;">0.5819%</div>
+                <div style="font-size: 9px; color: #666;">17/03/2003</div>
+            </div>
+            <div class="metric-card highlight-ref">
+                <h3>Ref. Máx Esperada</h3>
+                <div class="value">0.2100%</div>
+                <div style="font-size: 9px; color: #d35400;">Teto Referência Esperada</div>
+            </div>
+            <div class="metric-card highlight-vigente">
+                <h3>TR Vigente</h3>
+                <div class="value" id="card-tr-vigente">-</div>
+                <div style="font-size: 9px; color: #385723;" id="card-data-vigente">Mês Atual</div>
+            </div>
+            <div class="metric-card highlight-mix">
+                <h3>Ponto Médio</h3>
+                <div class="value" id="card-media-mix">-</div>
+                <div style="font-size: 9px; color: #555;">(Máx + Vigente)/2</div>
+            </div>
+        </div>
+
+        <!-- Formulário de Cálculo -->
+        <div class="form-group">
+            <label for="saldo-devedor">Digite o Saldo Devedor Atual (R$):</label>
+            <input type="number" id="saldo-devedor" step="0.01" value="20000.00" placeholder="Ex: 20000.00">
+            <button onclick="calcularCorrecaoCompleta()">Calcular Correções Separadas</button>
+
+            <!-- Resultados Principais Separados -->
+            <div id="resultados-principais" class="result-container">
+                <!-- Caixa do Vigente -->
+                <div class="result-box">
+                    <h4 id="ref-mes">Correção Vigente: -</h4>
+                    <div class="result-row"><span>Taxa Aplicada:</span> <strong id="res-tr">-</strong></div>
+                    <div class="result-row"><span>Valor da Correção:</span> <strong id="res-valor">-</strong></div>
+                    <div class="result-row"><span>Novo Saldo Devedor:</span> <strong id="res-novo-saldo">-</strong></div>
+                </div>
+
+                <!-- Linha 1: mês vigente e média atual -->
+                <div class="result-box average-box">
+                    <h4>Média Atual (12 meses)</h4>
+                    <div class="result-row"><span>Taxa Aplicada:</span> <strong>0.16343%</strong></div>
+                    <div class="result-row"><span>Valor da Correção:</span> <strong id="media-valor">-</strong></div>
+                    <div class="result-row"><span>Novo Saldo Devedor:</span> <strong id="media-novo-saldo">-</strong></div>
+                </div>
+
+                <!-- Linha 2: ponto médio e TR máxima esperada -->
+                <div class="result-box mix-box">
+                    <h4>Correção pelo Ponto Médio</h4>
+                    <div class="result-row"><span>Taxa (Máx + Vigente)/2:</span> <strong id="mix-taxa">-</strong></div>
+                    <div class="result-row"><span>Valor da Correção:</span> <strong id="mix-valor">-</strong></div>
+                    <div class="result-row"><span>Novo Saldo Devedor:</span> <strong id="mix-novo-saldo">-</strong></div>
+                </div>
+                <div class="result-box max-box">
+                    <h4>Correção pela TR Máxima Esperada</h4>
+                    <div class="result-row"><span>Taxa Aplicada:</span> <strong>0.2100%</strong></div>
+                    <div class="result-row"><span>Valor da Correção:</span> <strong id="max-esperada-valor">-</strong></div>
+                    <div class="result-row"><span>Novo Saldo Devedor:</span> <strong id="max-esperada-saldo">-</strong></div>
+                </div>
+            </div>
+
+            <!-- Comparativo Geral -->
+            <div id="comparativo" class="comparison-box">
+                <h3>Comparativo Completo com Parâmetros Históricos</h3>
+                <p>Projeção de correção aplicada sobre o saldo inserido:</p>
+                <div class="result-row"><span>1. Correção pela TR Máxima Histórica (0.5819%):</span> <strong id="comp-max">-</strong></div>
+                <div class="result-row"><span>2. Correção pelo <strong>Mês Vigente</strong>:</span> <strong id="comp-vigente">-</strong></div>
+                <div class="result-row"><span>3. Correção pelo <strong>Ponto Médio (Máx + Vigente)</strong>:</span> <strong id="comp-mix">-</strong></div>
+                <div class="result-row"><span>4. Referência Máxima Esperada (0.21%):</span> <strong id="comp-ref-max">-</strong></div>
+                <div class="result-row"><span>5. Média Histórica (25 anos - 0.11091%):</span> <strong id="comp-25a">-</strong></div>
+                <div class="result-row"><span>6. Média Recente (10 anos - 0.07299%):</span> <strong id="comp-10a">-</strong></div>
+                <div class="result-row"><span>7. Média Atual (12 meses - 0.16343%):</span> <strong id="comp-12m">-</strong></div>
+                <div class="result-row"><span>8. Mediana Histórica (0.10045%):</span> <strong id="comp-mediana">-</strong></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let taxaVigente = 0.0;
+    let dataVigente = "Recente";
+    
+    const media25anos = 0.11091;
+    const media10anos = 0.07299;
+    const media12meses = 0.16343;
+    const medianaHistorica = 0.10045;
+    const valorMaximo = 0.5819;
+    const refMaxEsperada = 0.21;
+    const saldoStorageKey = "calculoTRMensal.saldoDevedor";
+
+    function carregarSaldoSalvo() {
+        const saldoInput = document.getElementById('saldo-devedor');
+        const saldoSalvo = localStorage.getItem(saldoStorageKey);
+        saldoInput.value = saldoSalvo !== null ? saldoSalvo : "20000.00";
+    }
+
+    async function carregarTRVigente() {
+        const urlDirect = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.226/dados/ultimos/1?formato=json";
+        const urlProxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(urlDirect);
+
+        let data = null;
+
+        // Tentativa 1: Direta
+        try {
+            const res = await fetch(urlDirect);
+            data = await res.json();
+        } catch (e1) {
+            console.warn("Falha direta (possível CORS). Tentando via Proxy...");
+            // Tentativa 2: Via Proxy CORS
+            try {
+                const res = await fetch(urlProxy);
+                data = await res.json();
+                document.getElementById('cors-warning').style.display = 'block';
+            } catch (e2) {
+                console.error("Falha em ambos os endpoints.", e2);
+            }
+        }
+
+        if (data && data.length > 0) {
+            taxaVigente = parseFloat(data[0].valor);
+            dataVigente = data[0].data;
+        } else {
+            // Fallback caso a API esteja fora do ar
+            taxaVigente = 0.0;
+            dataVigente = "Não disponível";
+        }
+
+        const mediaMix = (valorMaximo + taxaVigente) / 2;
+
+        document.getElementById('card-tr-vigente').innerText = taxaVigente.toFixed(4) + '%';
+        document.getElementById('card-data-vigente').innerText = `Ref: ${dataVigente}`;
+        document.getElementById('card-media-mix').innerText = mediaMix.toFixed(4) + '%';
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+    }
+
+    function calcularCorrecaoCompleta() {
+        const saldoInput = document.getElementById('saldo-devedor').value;
+        const saldoDevedor = parseFloat(saldoInput);
+
+        if (isNaN(saldoDevedor) || saldoDevedor <= 0) {
+            alert("Por favor, insira um saldo devedor válido.");
+            return;
+        }
+
+        localStorage.setItem(saldoStorageKey, saldoInput);
+
+        // --- 1. Cálculo Mês Vigente ---
+        const fatorVigente = 1 + (taxaVigente / 100);
+        const novoSaldoVigente = saldoDevedor * fatorVigente;
+        const valorCorrecaoVigente = novoSaldoVigente - saldoDevedor;
+        const novoSaldoMedia = saldoDevedor * (1 + media12meses / 100);
+        document.getElementById('media-valor').innerText = formatarMoeda(novoSaldoMedia - saldoDevedor);
+        document.getElementById('media-novo-saldo').innerText = formatarMoeda(novoSaldoMedia);
+
+        const novoSaldoMaxEsperada = saldoDevedor * (1 + refMaxEsperada / 100);
+        document.getElementById('max-esperada-valor').innerText = formatarMoeda(novoSaldoMaxEsperada - saldoDevedor);
+        document.getElementById('max-esperada-saldo').innerText = formatarMoeda(novoSaldoMaxEsperada);
+
+        document.getElementById('ref-mes').innerText = `Mês Vigente (${dataVigente})`;
+        document.getElementById('res-tr').innerText = `${taxaVigente.toFixed(4)}%`;
+        document.getElementById('res-valor').innerText = formatarMoeda(valorCorrecaoVigente);
+        document.getElementById('res-novo-saldo').innerText = formatarMoeda(novoSaldoVigente);
+
+        // --- 2. Cálculo Ponto Médio (Máx + Vigente) / 2 ---
+        const mediaMix = (valorMaximo + taxaVigente) / 2;
+        const fatorMix = 1 + (mediaMix / 100);
+        const novoSaldoMix = saldoDevedor * fatorMix;
+        const valorCorrecaoMix = novoSaldoMix - saldoDevedor;
+
+        document.getElementById('mix-taxa').innerText = `${mediaMix.toFixed(4)}%`;
+        document.getElementById('mix-valor').innerText = formatarMoeda(valorCorrecaoMix);
+        document.getElementById('mix-novo-saldo').innerText = formatarMoeda(novoSaldoMix);
+
+        document.getElementById('resultados-principais').style.display = 'grid';
+
+        // --- 3. Preencher Comparativo Geral ---
+        document.getElementById('comp-max').innerText = formatarMoeda(saldoDevedor * (valorMaximo / 100));
+        document.getElementById('comp-vigente').innerText = formatarMoeda(valorCorrecaoVigente);
+        document.getElementById('comp-mix').innerText = formatarMoeda(valorCorrecaoMix);
+        document.getElementById('comp-ref-max').innerText = formatarMoeda(saldoDevedor * (refMaxEsperada / 100));
+        document.getElementById('comp-25a').innerText = formatarMoeda(saldoDevedor * (media25anos / 100));
+        document.getElementById('comp-10a').innerText = formatarMoeda(saldoDevedor * (media10anos / 100));
+        document.getElementById('comp-12m').innerText = formatarMoeda(saldoDevedor * (media12meses / 100));
+        document.getElementById('comp-mediana').innerText = formatarMoeda(saldoDevedor * (medianaHistorica / 100));
+
+        document.getElementById('comparativo').style.display = 'block';
+    }
+
+    function formatarMoeda(valor) {
+        return valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    carregarSaldoSalvo();
+    carregarTRVigente();
+</script>
+
+</body>
+</html>

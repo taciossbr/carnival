@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Financiamento Imobiliário - Tabela Price & Amortizações</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print {
+    @page {
+        size: landscape;
+        margin: 1cm;
+    }
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 8pt !important;
+    }
+    header, .no-print, form, button, input, select, canvas {
+        display: none !important;
+    }
+    .print-only {
+        display: block !important;
+    }
+    div, section {
+        max-height: none !important;
+        overflow: visible !important;
+        height: auto !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        font-size: 7.5pt !important;
+        page-break-inside: auto !important;
+    }
+    tr {
+        page-break-inside: avoid !important;
+        page-break-after: auto !important;
+    }
+    thead {
+        display: table-header-group !important;
+        background-color: #1e40af !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+    }
+    th, td {
+        border: 1px solid #cbd5e1 !important;
+        padding: 2px 4px !important;
+    }
+}
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+    <!-- Header -->
+    <header class="bg-blue-950 text-white shadow-md py-6 px-8 no-print">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold">Simulador Tabela Price & Amortizações</h1>
+                <p class="text-blue-200 text-sm mt-1">Motor Service com Juros, TR, MIP Dinâmico e Impressão Direta pelo Navegador</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="toggleModalTR(true)" class="bg-indigo-700 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow">
+                    📊 Relatório TR
+                </button>
+                <button onclick="toggleModalLote(true)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow">
+                    ⚙️ Regras em Lote
+                </button>
+                <button onclick="toggleModalMip(true)" class="bg-blue-800 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow">
+                    ℹ️ Tabela Alíquotas MIP
+                </button>
+                <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-medium text-sm transition shadow">
+                    🖨️ Imprimir / Salvar PDF
+                </button>
+                <button onclick="resetarDados()" class="bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-medium text-sm transition shadow" title="Limpar dados salvos">
+                    🗑️ Resetar
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+        <!-- Painel de Inputs -->
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 no-print">
+            <h2 class="text-lg font-bold text-slate-900 mb-4 pb-2 border-b">Parâmetros da Operação</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Saldo Devedor Inicial (R$)</label>
+                    <input type="number" step="0.01" id="inputPv" value="162000.00" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Prazo (Meses)</label>
+                    <input type="number" id="inputPrazo" value="222" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Taxa Juros Nominal Anual (%)</label>
+                    <input type="number" step="0.0001" id="inputJurosAnual" value="7.66" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Projeção TR Mensal (%)</label>
+                    <input type="number" step="0.0001" id="inputTrMensal" value="0.0" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium text-blue-600 font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Seguro DFI/DFC Fixo (R$)</label>
+                    <input type="number" step="0.01" id="inputDfi" value="27.69" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Taxa Administrativa (R$)</label>
+                    <input type="number" step="0.01" id="inputTaxaAdm" value="25.00" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Idade Inicial Mutuário</label>
+                    <input type="number" id="inputIdade" value="62" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase">Mês Aniversário (Outubro = 10)</label>
+                    <input type="number" id="inputMesAniv" value="10" onchange="salvarInputs()" class="mt-1 w-full p-2.5 border rounded-lg bg-slate-50 font-medium">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end">
+                <button onclick="executarSimulacao()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 rounded-lg shadow transition">
+                    🔄 Recalcular Simulação
+                </button>
+            </div>
+        </section>
+
+        <!-- Gráfico -->
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 no-print">
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Evolução do Encargo Total e Saldo Devedor</h2>
+            <div class="h-80">
+                <canvas id="chartSimulador"></canvas>
+            </div>
+        </section>
+
+        <!-- Tabela Completa -->
+        <section class="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Demonstrativo de Amortização (Tabela Price)</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Ordem oficial de colunas com Juros, Correção TR e aportes extras configuráveis.</p>
+                </div>
+                <span id="badgeTotalParcelas" class="text-xs bg-blue-100 text-blue-800 font-semibold px-3 py-1 rounded-full">222 Parcelas</span>
+            </div>
+            <div class="overflow-x-auto max-h-[550px]">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead class="bg-blue-950 text-white sticky top-0 uppercase tracking-wider">
+                        <tr>
+                            <th class="p-3 text-center">Nº</th>
+                            <th class="p-3">DT. VENCIMENTO</th>
+                            <th class="p-3 text-right">PRESTAÇÃO</th>
+                            <th class="p-3 text-right">JUROS</th>
+                            <th class="p-3 text-right">CORREÇÃO (TR)</th>
+                            <th class="p-3 text-right">MIP</th>
+                            <th class="p-3 text-right">DFI/DFC</th>
+                            <th class="p-3 text-right">SEGUROS/FGHAB</th>
+                            <th class="p-3 text-right">TX ADM</th>
+                            <th class="p-3 text-right">ENCARGO</th>
+                            <th class="p-3 text-right bg-emerald-800 no-print">APORTE EXTRA</th>
+                            <th class="p-3 text-center bg-emerald-800 no-print">MODO</th>
+                            <th class="p-3 text-right">SALDO DEV</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaCorpo" class="divide-y divide-slate-100 font-mono">
+                        <!-- Preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Relatório TR -->
+    <div id="modalTR" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Relatório Técnico TR</h3>
+                <button onclick="toggleModalTR(false)" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-lg font-mono text-xs space-y-2 border">
+                <p class="font-bold text-slate-700 border-b pb-1">--- RELATÓRIO TÉCNICO TR ---</p>
+                <p>Média Histórica (25 anos): <span class="font-semibold text-blue-700">0.11091%</span></p>
+                <p>Média Recente (10 anos): &nbsp; &nbsp; <span class="font-semibold text-blue-700">0.07299%</span></p>
+                <p>Média Atual (12 meses): &nbsp; &nbsp; &nbsp;<span class="font-semibold text-blue-700">0.16343%</span></p>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="toggleModalTR(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-lg font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Regras em Lote -->
+    <div id="modalLote" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Configurar Aportes Extras em Lote</h3>
+                <button onclick="toggleModalLote(false)" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+            <p class="text-sm text-slate-600">Digite as regras de amortização extra (salvas automaticamente):</p>
+            <ul class="text-xs text-slate-500 list-disc pl-5 space-y-1">
+                <li><code>1-12: 2000 prazo</code></li>
+                <li><code>24,48: 6000 prazo</code></li>
+                <li><code>13: 1500 prestacao</code></li>
+            </ul>
+            <textarea id="inputRegrasLote" rows="5" class="w-full p-3 border rounded-lg text-xs font-mono bg-slate-50" placeholder="1-12: 2000 prazo\n24,48: 6000 prazo\n13: 1500 prestacao"></textarea>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="toggleModalLote(false)" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs px-4 py-2 rounded-lg font-medium">Cancelar</button>
+                <button onclick="aplicarRegrasLote()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-lg font-semibold">Aplicar e Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alíquotas MIP -->
+    <div id="modalMip" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="text-lg font-bold text-slate-900">Tabela Atuarial de MIP (Saltos de Aniversário)</h3>
+                <button onclick="toggleModalMip(false)" class="text-slate-400 hover:text-slate-700 text-xl font-bold">&times;</button>
+            </div>
+            <div class="max-h-60 overflow-y-auto border rounded-lg">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-slate-100 font-semibold">
+                        <tr>
+                            <th class="p-2">Idade / Parcela</th>
+                            <th class="p-2">Comportamento do Seguro</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        <tr><td class="p-2 font-bold">62 anos (Parcela 1)</td><td class="p-2">R$ 102,55 inicial</td></tr>
+                        <tr class="bg-amber-50"><td class="p-2 font-bold text-amber-800">66 &rarr; 67 anos (Parcela 49)</td><td class="p-2 text-amber-800 font-semibold">⚡ Salto para R$ 138,42 (Novembro/2030)</td></tr>
+                        <tr class="bg-amber-50"><td class="p-2 font-bold text-amber-800">71 anos (Parcela 109)</td><td class="p-2 text-amber-800 font-semibold">⚡ Pico Máximo para R$ 194,38 (Novembro/2035)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end pt-2">
+                <button onclick="toggleModalMip(false)" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-4 py-2 rounded-lg font-medium">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript & Service Class -->
+    <script>
+        let aportesExtras = {};
+
+        function salvarInputs() {
+            const data = {
+                pv: document.getElementById('inputPv').value,
+                prazo: document.getElementById('inputPrazo').value,
+                jurosAnual: document.getElementById('inputJurosAnual').value,
+                trMensal: document.getElementById('inputTrMensal').value,
+                dfi: document.getElementById('inputDfi').value,
+                taxaAdm: document.getElementById('inputTaxaAdm').value,
+                idade: document.getElementById('inputIdade').value,
+                mesAniv: document.getElementById('inputMesAniv').value,
+                aportes: aportesExtras,
+                regrasLote: document.getElementById('inputRegrasLote').value
+            };
+            localStorage.setItem('simulador_price_data', JSON.stringify(data));
+        }
+
+        function carregarInputs() {
+            const saved = localStorage.getItem('simulador_price_data');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.pv) document.getElementById('inputPv').value = data.pv;
+                    if (data.prazo) document.getElementById('inputPrazo').value = data.prazo;
+                    if (data.jurosAnual) document.getElementById('inputJurosAnual').value = data.jurosAnual;
+                    if (data.trMensal) document.getElementById('inputTrMensal').value = data.trMensal;
+                    if (data.dfi) document.getElementById('inputDfi').value = data.dfi;
+                    if (data.taxaAdm) document.getElementById('inputTaxaAdm').value = data.taxaAdm;
+                    if (data.idade) document.getElementById('inputIdade').value = data.idade;
+                    if (data.mesAniv) document.getElementById('inputMesAniv').value = data.mesAniv;
+                    if (data.aportes) aportesExtras = data.aportes;
+                    if (data.regrasLote) document.getElementById('inputRegrasLote').value = data.regrasLote;
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        function resetarDados() {
+            if (confirm('Deseja realmente limpar todos os dados salvos e restaurar o padrão?')) {
+                localStorage.removeItem('simulador_price_data');
+                location.reload();
+            }
+        }
+
+        class PriceAmortizationService {
+            constructor(config) {
+                this.pv = config.pv;
+                this.prazo = config.prazo;
+                this.taxaJurosAnual = config.taxaJurosAnual;
+                this.taxaTrMensal = config.taxaTrMensal;
+                this.taxaAdm = config.taxaAdm;
+                this.taxaDfi = config.taxaDfi;
+                this.idadeInicial = config.idadeInicial;
+                this.mesAniversario = config.mesAniversario;
+            }
+
+getMipAmount(saldoAnterior, idade, n) {
+    let aliquotaBase = 0.0006330; // Até 65 anos (0,06330% ao mês)
+    if (idade >= 66 && idade < 71) {
+        aliquotaBase = 0.0009685; // 66 a 70 anos (0,09685% ao mês)
+    } else if (idade >= 71) {
+        aliquotaBase = 0.0017680; // 71 anos ou mais (0,17680% ao mês)
+    }
+    
+    return saldoAnterior * aliquotaBase;
+}
+
+            calcular(dataInicioStr) {
+                let resultados = [];
+                let [dia, mes, ano] = dataInicioStr.split('/').map(Number);
+                let dataAtual = new Date(ano, mes - 1, dia);
+
+                let saldoDevedor = this.pv;
+                let idadeAtual = this.idadeInicial;
+                let prazoRestante = this.prazo;
+                let iNominal = (this.taxaJurosAnual / 100) / 12;
+
+                let prestacaoAtual = this.pv * (iNominal * Math.pow(1 + iNominal, this.prazo)) / (Math.pow(1 + iNominal, this.prazo) - 1);
+
+                for (let n = 1; n <= this.prazo; n++) {
+                    if (saldoDevedor <= 0 || prazoRestante <= 0) break;
+
+                    let mesAtual = dataAtual.getMonth() + 1;
+                    if (n > 1 && mesAtual === this.mesAniversario) {
+                        idadeAtual++;
+                    }
+
+                    let saldoInicial = saldoDevedor;
+                    let correcaoTr = saldoInicial * (this.taxaTrMensal / 100);
+                    let saldoCorrigido = saldoInicial + correcaoTr;
+
+                    let juros = saldoCorrigido * iNominal;
+                    let prestacao = prestacaoAtual;
+                    let amortizacao = prestacao - juros;
+
+                    if (amortizacao > saldoCorrigido) {
+                        amortizacao = saldoCorrigido;
+                        prestacao = juros + amortizacao;
+                    }
+
+                    let seguroMip = this.getMipAmount(saldoInicial, idadeAtual, n);
+                    let seguroDfi = this.taxaDfi;
+                    let seguroFghab = seguroMip + seguroDfi;
+                    let taxaAdm = this.taxaAdm;
+
+                    // O encargo total NÃO deve incluir o valor de amortização (conforme solicitado).
+                    // Ou seja: Encargo = Juros + Correção (TR) + Seguros (MIP + DFI) + Taxa Adm.
+                    let encargoTotal = prestacao + correcaoTr + seguroFghab + taxaAdm;
+
+                    let aporteObj = aportesExtras[n] || { valor: 0, modo: 'prazo' };
+                    let aporteExtra = aporteObj.valor;
+                    let modoAporte = aporteObj.modo;
+
+                    let saldoDevedorFinal = saldoCorrigido - amortizacao - aporteExtra;
+                    if (saldoDevedorFinal < 0) {
+                        aporteExtra += saldoDevedorFinal;
+                        saldoDevedorFinal = 0;
+                    }
+
+                    resultados.push({
+                        n: n,
+                        data: `${String(dataAtual.getDate()).padStart(2, '0')}/${String(dataAtual.getMonth() + 1).padStart(2, '0')}/${dataAtual.getFullYear()}`,
+                        prestacao: prestacao,
+                        juros: juros,
+                        correcaoTr: correcaoTr,
+                        mip: seguroMip,
+                        dfi: seguroDfi,
+                        segurosFghab: seguroFghab,
+                        taxaAdm: taxaAdm,
+                        encargo: encargoTotal,
+                        aporteExtra: aporteExtra,
+                        modoAporte: modoAporte,
+                        saldoDev: saldoDevedorFinal
+                    });
+
+                    if (aporteExtra > 0) {
+                        if (modoAporte === 'prazo') {
+                            prazoRestante--;
+                        } else if (modoAporte === 'prestacao') {
+                            let pRest = prazoRestante - 1;
+                            if (pRest > 0) {
+                                prestacaoAtual = saldoDevedorFinal * (iNominal * Math.pow(1 + iNominal, pRest)) / (Math.pow(1 + iNominal, pRest) - 1);
+                            }
+                        }
+                    }
+
+                    saldoDevedor = saldoDevedorFinal;
+                    dataAtual.setMonth(dataAtual.getMonth() + 1);
+                    prazoRestante--;
+                }
+                return resultados;
+            }
+        }
+
+        let chartInstance = null;
+
+        function formatMoney(val) {
+            return 'R$ ' + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function toggleModalTR(show) {
+            const modal = document.getElementById('modalTR');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function toggleModalMip(show) {
+            const modal = document.getElementById('modalMip');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function toggleModalLote(show) {
+            const modal = document.getElementById('modalLote');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function aplicarRegrasLote() {
+            const texto = document.getElementById('inputRegrasLote').value;
+            const linhas = texto.split('\n');
+
+            linhas.forEach(linha => {
+                linha = linha.trim();
+                if (!linha) return;
+                const partes = linha.split(':');
+                if (partes.length !== 2) return;
+
+                const seletor = partes[0].trim();
+                const resto = partes[1].trim().split(' ');
+                const valor = parseFloat(resto[0]);
+                const modo = (resto[1] && resto[1].toLowerCase().includes('prest')) ? 'prestacao' : 'prazo';
+
+                if (isNaN(valor)) return;
+
+                if (seletor.includes('-')) {
+                    let [inicio, fim] = seletor.split('-').map(Number);
+                    for (let p = inicio; p <= fim; p++) {
+                        aportesExtras[p] = { valor: valor, modo: modo };
+                    }
+                } else if (seletor.includes(',')) {
+                    let parcelas = seletor.split(',').map(Number);
+                    parcelas.forEach(p => {
+                        aportesExtras[p] = { valor: valor, modo: modo };
+                    });
+                } else {
+                    let p = parseInt(seletor);
+                    if (!isNaN(p)) {
+                        aportesExtras[p] = { valor: valor, modo: modo };
+                    }
+                }
+            });
+
+            salvarInputs();
+            toggleModalLote(false);
+            executarSimulacao();
+        }
+
+        function atualizarAporteManual(n, inputVal) {
+            const val = parseFloat(inputVal.value) || 0;
+            const modoSelect = document.getElementById(`modo_${n}`);
+            const modo = modoSelect ? modoSelect.value : 'prazo';
+
+            if (val > 0) {
+                aportesExtras[n] = { valor: val, modo: modo };
+            } else {
+                delete aportesExtras[n];
+            }
+            salvarInputs();
+            executarSimulacao();
+        }
+
+        function alterarModoManual(n) {
+            const inputVal = document.getElementById(`aporte_${n}`);
+            if (inputVal && aportesExtras[n]) {
+                const modoSelect = document.getElementById(`modo_${n}`);
+                aportesExtras[n].modo = modoSelect.value;
+                salvarInputs();
+                executarSimulacao();
+            }
+        }
+
+        function executarSimulacao() {
+            const config = {
+                pv: parseFloat(document.getElementById('inputPv').value),
+                prazo: parseInt(document.getElementById('inputPrazo').value),
+                taxaJurosAnual: parseFloat(document.getElementById('inputJurosAnual').value),
+                taxaTrMensal: parseFloat(document.getElementById('inputTrMensal').value),
+                taxaDfi: parseFloat(document.getElementById('inputDfi').value),
+                taxaAdm: parseFloat(document.getElementById('inputTaxaAdm').value),
+                idadeInicial: parseInt(document.getElementById('inputIdade').value),
+                mesAniversario: parseInt(document.getElementById('inputMesAniv').value)
+            };
+
+            const service = new PriceAmortizationService(config);
+            const dados = service.calcular('10/11/2026');
+
+            document.getElementById('badgeTotalParcelas').innerText = `${dados.length} Parcelas`;
+
+            const tbody = document.getElementById('tabelaCorpo');
+            tbody.innerHTML = '';
+            dados.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-bold text-slate-600">${row.n}</td>
+                    <td class="p-3">${row.data}</td>
+                    <td class="p-3 text-right">${formatMoney(row.prestacao)}</td>
+                    <td class="p-3 text-right text-indigo-700">${formatMoney(row.juros)}</td>
+                    <td class="p-3 text-right text-blue-600 font-bold">${formatMoney(row.correcaoTr)}</td>
+                    <td class="p-3 text-right text-amber-700">${formatMoney(row.mip)}</td>
+                    <td class="p-3 text-right">${formatMoney(row.dfi)}</td>
+                    <td class="p-3 text-right font-semibold">${formatMoney(row.segurosFghab)}</td>
+                    <td class="p-3 text-right">${formatMoney(row.taxaAdm)}</td>
+                    <td class="p-3 text-right font-bold text-slate-900">${formatMoney(row.encargo)}</td>
+                    <td class="p-3 text-right bg-emerald-50 no-print">
+                        <input type="number" step="100" id="aporte_${row.n}" value="${row.aporteExtra > 0 ? row.aporteExtra : ''}" placeholder="0,00" onchange="atualizarAporteManual(${row.n}, this)" class="w-24 p-1 text-right border rounded bg-white text-xs font-semibold text-emerald-800">
+                    </td>
+                    <td class="p-3 text-center bg-emerald-50 no-print">
+                        <select id="modo_${row.n}" onchange="alterarModoManual(${row.n})" class="text-[10px] p-1 border rounded bg-white font-medium">
+                            <option value="prazo" ${row.modoAporte === 'prazo' ? 'selected' : ''}>Prazo</option>
+                            <option value="prestacao" ${row.modoAporte === 'prestacao' ? 'selected' : ''}>Prestação</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-right text-slate-600">${formatMoney(row.saldoDev)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            atualizarGrafico(dados);
+        }
+
+        function atualizarGrafico(dados) {
+            const ctx = document.getElementById('chartSimulador').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            const labels = dados.map(d => `P${d.n}`);
+            const encargos = dados.map(d => d.encargo);
+            const saldos = dados.map(d => d.saldoDev / 1000);
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Encargo Total (R$)',
+                            data: encargos,
+                            borderColor: '#1e40af',
+                            backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                            yAxisID: 'y',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Saldo Devedor (Mil R$)',
+                            data: saldos,
+                            borderColor: '#0d9488',
+                            yAxisID: 'y1',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { type: 'linear', position: 'left', title: { display: true, text: 'Encargo (R$)' } },
+                        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Saldo (Mil R$)' } }
+                    }
+                }
+            });
+        }
+
+        window.onload = function() {
+            carregarInputs();
+            executarSimulacao();
+        };
+    </script>
+</body>
+</html>

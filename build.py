@@ -31,7 +31,7 @@ def build_simple_tool(tool_file: Path, relative_path: Path):
     relative_file = relative_path.with_suffix(".html")
 
     return {
-        "name": tool_file.stem,
+        "name": " / ".join(relative_path.with_suffix("").parts),
         "file": str(relative_file).replace("\\", "/"),
     }
 
@@ -74,7 +74,7 @@ def build_complex_tool(tool_dir: Path, relative_path: Path):
     relative_file = relative_path / "tool.html"
 
     return {
-        "name": tool_dir.name,
+        "name": " / ".join(relative_path.parts),
         "file": str(relative_file).replace("\\", "/"),
     }
 
@@ -84,8 +84,8 @@ def process_directory(current_dir: Path):
     tools = []
 
     for entry in sorted(current_dir.iterdir(), key=lambda p: p.name.lower()):
-        # Ignora arquivos/diretórios ocultos
-        if entry.name.startswith("."):
+        # Ignora arquivos/diretórios ocultos e o conteúdo arquivado.
+        if entry.name.startswith(".") or entry.name.lower() == "arquivados":
             continue
 
         relative_path = entry.relative_to(TOOLS_DIR)
