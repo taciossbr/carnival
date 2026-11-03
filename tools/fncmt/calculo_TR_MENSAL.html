@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulador de Correção por TR</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]'], ['$$', '$$']] },
+            startup: { typeset: false }
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         :root {
             --primary: #1f4e78;
@@ -191,6 +198,61 @@
             margin-bottom: 15px;
             display: none;
         }
+        .amortizacao-section {
+            margin-top: 28px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .amortizacao-section summary {
+            padding: 16px 20px;
+            color: var(--primary);
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .amortizacao-content { padding: 0 20px 20px; }
+        .amortizacao-content p { line-height: 1.5; }
+        .investment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin: 18px 0;
+        }
+        .investment-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .investment-card h4 { margin: 0 0 8px; color: var(--primary); }
+        .investment-card p { margin: 5px 0; font-size: 14px; }
+        .annual-summary {
+            margin: 18px 0;
+            padding: 14px 16px;
+            border: 1px solid #b4c6e7;
+            border-radius: 8px;
+            background: #eef2f7;
+        }
+        .annual-summary h4 { margin: 0 0 8px; color: var(--primary); }
+        .annual-summary p { margin: 5px 0; font-size: 14px; }
+        .annual-comparison { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+        .annual-comparison th, .annual-comparison td { border: 1px solid var(--border-color); padding: 8px; text-align: left; vertical-align: top; }
+        .annual-comparison th { background: #e2e8f0; }
+        @media(max-width: 600px) {
+            .annual-comparison { font-size: 11px; }
+            .annual-comparison th, .annual-comparison td { padding: 5px; }
+        }
+        .recommendation {
+            margin-top: 16px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #e2efda;
+            border: 1px solid #c6e0b4;
+            line-height: 1.55;
+        }
+        .recommendation.invest { background: #eef2f7; border-color: #b4c6e7; }
+        .recommendation.error { background: #fff3cd; border-color: #ffeeba; }
+        .small-note { color: #666; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -295,6 +357,34 @@
                 <div class="result-row"><span>8. Mediana Histórica (0.10045%):</span> <strong id="comp-mediana">-</strong></div>
             </div>
         </div>
+
+        <details class="amortizacao-section" id="amortizacao-section">
+            <summary>Vale a pena amortizar ou investir o valor?</summary>
+            <div class="amortizacao-content">
+                <p>Compare a economia estimada ao amortizar o financiamento pela Tabela Price com o rendimento líquido dos investimentos até o fim do prazo. Preencha também a taxa de juros anual do financiamento e o prazo restante.</p>
+                <label for="amortizacao-valor">Valor disponível para amortizar ou investir (R$):</label>
+                <input type="number" id="amortizacao-valor" step="0.01" min="0.01" placeholder="Ex: 10000.00">
+                <label for="amortizacao-juros">Taxa efetiva anual de juros do financiamento (% a.a.):</label>
+                <input type="number" id="amortizacao-juros" step="0.01" min="0" placeholder="Ex: 10.5" aria-describedby="amortizacao-juros-ajuda">
+                <p id="amortizacao-juros-ajuda" class="small-note">Informe a taxa efetiva anual do contrato, não a taxa nominal.</p>
+                <label for="amortizacao-prazo">Prazo restante (meses):</label>
+                <input type="number" id="amortizacao-prazo" step="1" min="1" placeholder="Ex: 180">
+                <label for="amortizacao-modo">Como aplicar a amortização?</label>
+                <select id="amortizacao-modo" style="width:100%;padding:12px;font-size:16px;border:1px solid var(--border-color);border-radius:5px;box-sizing:border-box;margin-bottom:15px">
+                    <option value="parcela">Reduzir o valor das parcelas e manter o prazo</option>
+                    <option value="prazo">Manter a parcela e reduzir o prazo</option>
+                </select>
+                <button type="button" id="calcular-amortizacao" onclick="compararAmortizacaoInvestimentos()">Comparar amortização e investimentos</button>
+                <div id="amortizacao-loading" class="loading" style="display:none">Consultando índices atuais e calculando...</div>
+                <div id="amortizacao-resultados" style="display:none">
+                    <p id="amortizacao-contexto"></p>
+                    <div id="resumo-anual" class="annual-summary"></div>
+                    <div class="investment-grid" id="investimento-cards"></div>
+                    <div id="amortizacao-recomendacao" class="recommendation"></div>
+                    <p class="small-note">Estimativas por taxa constante durante todo o prazo. O CDB e o Tesouro Selic descontam IR regressivo do rendimento; a poupança é isenta. Tesouro Selic considera Selic meta como aproximação do rendimento e taxa de custódia estimada. Não estão modelados tarifas do financiamento, seguro, custos da instituição, IOF ou mudanças futuras nas taxas. Simulação informativa, não é recomendação de investimento.</p>
+                </div>
+            </div>
+        </details>
     </div>
 </div>
 
@@ -309,11 +399,39 @@
     const valorMaximo = 0.5819;
     const refMaxEsperada = 0.21;
     const saldoStorageKey = "calculoTRMensal.saldoDevedor";
+    const amortizacaoStorageKey = "calculoTRMensal.amortizacao";
+    const apiIndiceBcb = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.";
+    const urlProxyBcb = "https://api.allorigins.win/raw?url=";
+    let consultaIndicesEmAndamento = null;
 
     function carregarSaldoSalvo() {
         const saldoInput = document.getElementById('saldo-devedor');
         const saldoSalvo = localStorage.getItem(saldoStorageKey);
         saldoInput.value = saldoSalvo !== null ? saldoSalvo : "20000.00";
+    }
+
+    function carregarDadosAmortizacaoSalvos() {
+        try {
+            const dados = JSON.parse(localStorage.getItem(amortizacaoStorageKey) || "{}");
+            if (dados.valor !== undefined) document.getElementById('amortizacao-valor').value = dados.valor;
+            if (dados.juros !== undefined) document.getElementById('amortizacao-juros').value = dados.juros;
+            if (dados.prazo !== undefined) document.getElementById('amortizacao-prazo').value = dados.prazo;
+            if (dados.modo === 'parcela' || dados.modo === 'prazo') {
+                document.getElementById('amortizacao-modo').value = dados.modo;
+            }
+        } catch (erro) {
+            console.warn('Não foi possível restaurar os dados da amortização salvos.', erro);
+        }
+    }
+
+    function salvarDadosAmortizacao() {
+        const dados = {
+            valor: document.getElementById('amortizacao-valor').value,
+            juros: document.getElementById('amortizacao-juros').value,
+            prazo: document.getElementById('amortizacao-prazo').value,
+            modo: document.getElementById('amortizacao-modo').value
+        };
+        localStorage.setItem(amortizacaoStorageKey, JSON.stringify(dados));
     }
 
     async function carregarTRVigente() {
@@ -338,7 +456,7 @@
             }
         }
 
-        if (data && data.length > 0) {
+        if (data && data.length > 0 && Number.isFinite(parseFloat(data[0].valor))) {
             taxaVigente = parseFloat(data[0].valor);
             dataVigente = data[0].data;
         } else {
@@ -355,6 +473,218 @@
 
         document.getElementById('loading').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
+    }
+
+    async function buscarSerieBcb(codigoSerie, quantidade) {
+        const url = `${apiIndiceBcb}${codigoSerie}/dados/ultimos/${quantidade}?formato=json`;
+        let resposta;
+        try {
+            resposta = await fetch(url);
+        } catch (_) {
+            resposta = await fetch(urlProxyBcb + encodeURIComponent(url));
+        }
+        if (!resposta.ok) throw new Error(`Não foi possível consultar a série ${codigoSerie} do Banco Central.`);
+        const registros = await resposta.json();
+        if (!Array.isArray(registros) || !registros.length) throw new Error(`A série ${codigoSerie} não retornou dados.`);
+        return registros;
+    }
+
+    async function buscarIndicesInvestimento() {
+        if (!consultaIndicesEmAndamento) {
+            consultaIndicesEmAndamento = (async () => {
+                // SGS 432: meta Selic (% a.a.); SGS 12: TR mensal (%); SGS 4389: CDI diário (% a.a.).
+                const [selicRegistros, cdiRegistros] = await Promise.all([
+                    buscarSerieBcb(432, 1), buscarSerieBcb(4389, 10)
+                ]);
+                const selic = Number(selicRegistros[0].valor);
+                const tr = taxaVigente;
+                const cdiRegistro = cdiRegistros.find(registro => Number.isFinite(Number(registro.valor)));
+                const cdi = cdiRegistro ? Number(cdiRegistro.valor) : NaN;
+                if (![selic, tr, cdi].every(Number.isFinite)) throw new Error('O Banco Central retornou índices inválidos.');
+                return { selic, selicData: selicRegistros[0].data, tr, trData: dataVigente, cdi, cdiData: cdiRegistro.data };
+            })().catch(erro => {
+                consultaIndicesEmAndamento = null;
+                throw erro;
+            });
+        }
+        return consultaIndicesEmAndamento;
+    }
+
+    function calcularMontanteMensal(valor, taxaAnual, meses) {
+        return valor * Math.pow(1 + taxaAnual, meses / 12);
+    }
+
+    function calcularValorFuturoRendaFixa(valor, taxaAnual, meses, taxaCustodiaAnual = 0) {
+        const taxaMensalBruta = Math.pow(1 + taxaAnual, 1 / 12) - 1;
+        const taxaMensalCustodia = Math.pow(1 + taxaCustodiaAnual, 1 / 12) - 1;
+        return valor * Math.pow(1 + taxaMensalBruta - taxaMensalCustodia, meses);
+    }
+
+    function calcularIrRendaFixa(lucro, meses) {
+        const aliquota = meses <= 6 ? 0.225 : meses <= 12 ? 0.20 : meses <= 24 ? 0.175 : 0.15;
+        return Math.max(0, lucro) * aliquota;
+    }
+
+    function formatarTaxaAnual(valor) {
+        return `${(valor * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}% a.a.`;
+    }
+
+    function formatarTaxaLatex(valor, negrito = false) {
+        const numero = (valor * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }).replace(',', '{,}');
+        const taxa = `${numero}\\%`;
+        return negrito ? `\\mathbf{${taxa}}` : taxa;
+    }
+
+    async function renderizarMathJax(elemento) {
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            try {
+                await window.MathJax.typesetPromise([elemento]);
+            } catch (erro) {
+                console.warn('Não foi possível renderizar as fórmulas do resumo.', erro);
+            }
+        }
+    }
+
+    function simularEconomiaPrice(valorAmortizado, saldoDevedor, taxaFinanciamentoMensal, trMensal, prazoMeses, modoAmortizacao = 'parcela') {
+        const saldoBase = Math.max(0, saldoDevedor);
+        const amortizacao = Math.min(valorAmortizado, saldoBase);
+        // Na Price, a TR corrige o saldo antes da incidência dos juros mensais.
+        // A taxa combinada efetiva do período representa a mesma ordem de cálculo.
+        const taxaMensalTotal = (1 + trMensal) * (1 + taxaFinanciamentoMensal) - 1;
+        const fatorPrice = taxaMensalTotal === 0
+            ? 1 / prazoMeses
+            : taxaMensalTotal * Math.pow(1 + taxaMensalTotal, prazoMeses) /
+                (Math.pow(1 + taxaMensalTotal, prazoMeses) - 1);
+        const parcelaOriginal = saldoBase * fatorPrice;
+        const parcelaComAmortizacao = modoAmortizacao === 'parcela' ? (saldoBase - amortizacao) * fatorPrice : parcelaOriginal;
+
+        function projetar(saldoInicial, parcelaInicial, recalcularParcela) {
+            let saldo = saldoInicial;
+            let totalParcelas = 0;
+            let meses = 0;
+            while (saldo > 0.005 && meses < prazoMeses) {
+                const parcelasRestantes = prazoMeses - meses;
+                const parcela = recalcularParcela
+                    ? saldo * (1 + taxaMensalTotal) * Math.pow(1 + taxaMensalTotal, parcelasRestantes - 1) *
+                        (taxaMensalTotal === 0 ? 1 / parcelasRestantes : taxaMensalTotal / (Math.pow(1 + taxaMensalTotal, parcelasRestantes) - 1))
+                    : parcelaInicial;
+                const saldoCorrigido = saldo * (1 + trMensal);
+                const juros = saldoCorrigido * taxaFinanciamentoMensal;
+                const amortizacaoMensal = Math.min(saldoCorrigido, Math.max(0, parcela - juros));
+                const parcelaReal = Math.min(parcela, juros + amortizacaoMensal);
+                totalParcelas += parcelaReal;
+                saldo = Math.max(0, saldoCorrigido - amortizacaoMensal);
+                meses++;
+            }
+            return { totalParcelas, meses, saldoFinal: saldo };
+        }
+
+        const semAmortizacao = projetar(saldoBase, parcelaOriginal, false);
+        const comAmortizacao = projetar(saldoBase - amortizacao, parcelaComAmortizacao, modoAmortizacao === 'parcela');
+        const totalPagoComAmortizacao = amortizacao + comAmortizacao.totalParcelas;
+        return {
+            economia: semAmortizacao.totalParcelas - totalPagoComAmortizacao,
+            totalPagoOriginal: semAmortizacao.totalParcelas,
+            totalPagoAmortizado: totalPagoComAmortizacao,
+            amortizacao,
+            mesesComAmortizacao: comAmortizacao.meses,
+            saldoFinalSemAmortizacao: semAmortizacao.saldoFinal,
+            saldoFinalComAmortizacao: comAmortizacao.saldoFinal,
+            parcelaOriginal,
+            parcelaComAmortizacao,
+            taxaMensalTotal,
+            modoAmortizacao
+        };
+    }
+
+    async function compararAmortizacaoInvestimentos() {
+        const valor = Number(document.getElementById('amortizacao-valor').value);
+        const saldo = Number(document.getElementById('saldo-devedor').value);
+        const jurosAnuais = Number(document.getElementById('amortizacao-juros').value);
+        const prazoMeses = Number(document.getElementById('amortizacao-prazo').value);
+        const modoAmortizacao = document.getElementById('amortizacao-modo').value;
+        const resultadoEl = document.getElementById('amortizacao-resultados');
+        const recomendacaoEl = document.getElementById('amortizacao-recomendacao');
+        const botao = document.getElementById('calcular-amortizacao');
+        resultadoEl.style.display = 'none';
+
+        if (!(valor > 0) || !(saldo > 0) || !(jurosAnuais >= 0) || !(prazoMeses > 0) || !Number.isInteger(prazoMeses)) {
+            alert('Preencha um valor para amortizar, juros anuais válidos, saldo devedor e prazo restante em meses.');
+            return;
+        }
+        if (valor > saldo) {
+            alert('O valor a amortizar não pode superar o saldo devedor atual.');
+            return;
+        }
+
+        botao.disabled = true;
+        document.getElementById('amortizacao-loading').style.display = 'block';
+        try {
+            const indices = await buscarIndicesInvestimento();
+            const trMensalAtual = refMaxEsperada / 100;
+            const taxaMensalFinanciamento = Math.pow(1 + jurosAnuais / 100, 1 / 12) - 1;
+            const amortizacao = simularEconomiaPrice(valor, saldo, taxaMensalFinanciamento, trMensalAtual, prazoMeses, modoAmortizacao);
+            const taxaJurosEfetivaAnual = jurosAnuais / 100;
+            const taxaTrEfetivaAnual = Math.pow(1 + trMensalAtual, 12) - 1;
+            const custoFinanciamentoAnual = (1 + taxaJurosEfetivaAnual) * (1 + taxaTrEfetivaAnual) - 1;
+            const taxaPoupancaMensal = indices.selic > 8.5 ? 0.005 + trMensalAtual : indices.selic / 100 / 12 * 0.7;
+            const retornoPoupancaAnual = Math.pow(1 + taxaPoupancaMensal, 12) - 1;
+            const poupancaFutura = valor * Math.pow(1 + taxaPoupancaMensal, prazoMeses);
+            const cdiFuturoBruto = calcularMontanteMensal(valor, indices.cdi / 100, prazoMeses);
+            const cdiIr = calcularIrRendaFixa(cdiFuturoBruto - valor, prazoMeses);
+            const cdiFuturo = cdiFuturoBruto - cdiIr;
+            // Para anualizar corretamente o ganho líquido com IR pago no resgate, calcula o montante de 12 meses após IR.
+            // SGS 4389 já fornece CDI efetivo anual (% a.a.); não anualizar a taxa uma segunda vez.
+            const retornoCdiLiquidoAnualAposIr = (indices.cdi / 100) * (1 - 0.20);
+            // Alíquota semestral regressiva estimada para comparação do Tesouro, com taxa B3 de custódia padrão.
+            const selicFuturoBruto = calcularValorFuturoRendaFixa(valor, indices.selic / 100, prazoMeses, 0.002);
+            const selicIr = calcularIrRendaFixa(selicFuturoBruto - valor, prazoMeses);
+            const selicFuturo = selicFuturoBruto - selicIr;
+            const selicLiquido12m = calcularValorFuturoRendaFixa(1, indices.selic / 100, 12, 0.002);
+            const retornoSelicLiquidoAnual = (selicLiquido12m - 1) * (1 - 0.20);
+            const alternativas = [
+                { nome: 'Tesouro Selic', taxa: `${formatarPercentual(indices.selic)} a.a. (Selic meta)`, data: indices.selicData, ganho: selicFuturo - valor, final: selicFuturo, ir: selicIr },
+                { nome: 'CDB 100% do CDI', taxa: `${formatarPercentual(indices.cdi)} a.a. (CDI)`, data: indices.cdiData, ganho: cdiFuturo - valor, final: cdiFuturo, ir: cdiIr },
+                { nome: 'Poupança', taxa: indices.selic > 8.5 ? `0,5% a.m. + TR (${formatarPercentual(indices.tr)} a.m.)` : '70% da Selic meta a.a.', data: `${indices.selicData} / TR ${indices.trData}`, ganho: poupancaFutura - valor, final: poupancaFutura, ir: 0 }
+            ];
+
+            document.getElementById('amortizacao-contexto').innerHTML = `<ul><li><strong>Saldo financiado:</strong> ${formatarMoeda(saldo)}</li><li><strong>Valor comparado:</strong> ${formatarMoeda(valor)}</li><li><strong>Prazo:</strong> ${prazoMeses} meses</li><li><strong>TR fixa usada no financiamento:</strong> ${formatarPercentual(refMaxEsperada)} a.m. (máxima esperada), aplicada em todos os meses. A TR vigente exibida acima fica apenas como referência.</li><li>A projeção compara os fluxos Price e incorpora juros e TR mês a mês.</li></ul>`;
+            const taxaLiquidaTesouroExibe = retornoSelicLiquidoAnual;
+            const taxaLiquidaCdbExibe = retornoCdiLiquidoAnualAposIr;
+            const taxaLiquidaPoupancaExibe = retornoPoupancaAnual;
+            const linhaComparacaoAnual = (retorno, nome) => {
+                const diferenca = retorno - custoFinanciamentoAnual;
+                const sinal = diferenca > 0 ? '+' : diferenca < 0 ? '-' : '';
+                const diferencaLatex = formatarTaxaLatex(Math.abs(diferenca), true);
+                const resultado = diferenca > 0
+                    ? `\\( ${sinal}${diferencaLatex} \\) p.p. a favor de investir`
+                    : `\\( ${sinal}${diferencaLatex} \\) p.p. pior que amortizar`;
+                return `<tr><td>${nome}</td><td>\\( ${formatarTaxaLatex(retorno, true)} \\) a.a.</td><td><strong>${resultado}</strong></td></tr>`;
+            };
+            document.getElementById('resumo-anual').innerHTML = `<h4>Resumo anual das taxas</h4><ol><li><strong>Custo efetivo estimado do financiamento</strong><ul><li>Juros efetivos do contrato: \\( ${formatarTaxaLatex(taxaJurosEfetivaAnual)} \\).</li><li>TR fixa: \\(0{,}21\\%\\) ao mês, equivalente a \\((1+0{,}0021)^{12}-1=${formatarTaxaLatex(taxaTrEfetivaAnual, true)}\\).</li><li>Cálculo combinado: \\((1+i_{anual})(1+TR_{mensal})^{12}-1=${formatarTaxaLatex(custoFinanciamentoAnual, true)}\\).</li></ul></li><li><strong>Rentabilidade líquida estimada em 12 meses</strong><ul><li>Tesouro Selic: taxa Selic de \\( ${formatarTaxaLatex(indices.selic / 100)} \\); após custódia estimada e IR de 20% sobre o rendimento: \\( ${formatarTaxaLatex(taxaLiquidaTesouroExibe, true)} \\) a.a.</li><li>CDB a 100% do CDI: CDI efetivo anual de \\( ${formatarTaxaLatex(indices.cdi / 100)} \\); após IR de 20% sobre o rendimento: \\( ${formatarTaxaLatex(taxaLiquidaCdbExibe, true)} \\) a.a.</li><li>Poupança: rendimento líquido de \\( ${formatarTaxaLatex(taxaLiquidaPoupancaExibe, true)} \\) a.a., isenta de IR.</li></ul></li><li><strong>Comparativo financeiro direto</strong><table class="annual-comparison"><thead><tr><th>Modalidade</th><th>Retorno / custo líquido (a.a.)</th><th>Comparativo vs. financiamento</th></tr></thead><tbody><tr><td>Custo do financiamento (juros + TR)</td><td>\\( ${formatarTaxaLatex(custoFinanciamentoAnual, true)} \\) a.a.</td><td>Base de custo</td></tr>${linhaComparacaoAnual(taxaLiquidaTesouroExibe, 'Tesouro Selic (líquido de IR e custódia)')}${linhaComparacaoAnual(taxaLiquidaCdbExibe, 'CDB 100% CDI (líquido de IR)')}${linhaComparacaoAnual(taxaLiquidaPoupancaExibe, 'Poupança (isenta de IR)')}</tbody></table></li></ol><p class="small-note">O CDI da série 4389 já é uma taxa efetiva anualizada; o cálculo aplica o IR de 20% ao ganho anual, sem anualizar novamente. Os ganhos dos cards usam o prazo completo informado e a alíquota de IR correspondente a esse prazo.</p>`;
+            renderizarMathJax(document.getElementById('resumo-anual'));
+            document.getElementById('investimento-cards').innerHTML = alternativas.map(item => `<div class="investment-card"><h4>${item.nome}</h4><p>Índice de referência: <strong>${item.taxa}</strong></p><p>Data do dado: ${item.data}</p><p>Ganho bruto estimado: <strong>${formatarMoeda(item.ganho + item.ir)}</strong></p><p>IR estimado: <strong>${formatarMoeda(item.ir)}${item.ir === 0 ? ' (isento)' : ''}</strong></p><p>Ganho líquido estimado: <strong>${formatarMoeda(item.ganho)}</strong></p><p>Montante final líquido: ${formatarMoeda(item.final)}</p></div>`).join('');
+            const comparacoes = alternativas.map(item => {
+                const diferenca = amortizacao.economia - item.ganho;
+                return `<li><strong>${diferenca >= 0 ? 'Amortizar ganha' : 'Amortizar perde'} para ${item.nome}</strong> por ${formatarMoeda(Math.abs(diferenca))} (economia Price ${formatarMoeda(amortizacao.economia)} vs. ganho líquido ${formatarMoeda(item.ganho)}).</li>`;
+            }).join('');
+            recomendacaoEl.className = `recommendation ${amortizacao.economia >= alternativas[0].ganho && amortizacao.economia >= alternativas[1].ganho && amortizacao.economia >= alternativas[2].ganho ? '' : 'invest'}`;
+            const descricaoModo = modoAmortizacao === 'parcela' ? 'redução da parcela, mantendo o prazo' : 'redução do prazo, mantendo a parcela';
+            recomendacaoEl.innerHTML = `<strong>Economia total estimada ao amortizar (${descricaoModo}): ${formatarMoeda(amortizacao.economia)}</strong><br>Sem amortização, parcelas projetadas: ${formatarMoeda(amortizacao.totalPagoOriginal)}. Com amortização inicial de ${formatarMoeda(valor)}, parcelas projetadas: ${formatarMoeda(amortizacao.totalPagoAmortizado)}. Parcela Price inicial estimada: ${formatarMoeda(amortizacao.parcelaOriginal)} sem amortizar e ${formatarMoeda(amortizacao.parcelaComAmortizacao)} após amortizar. A economia é a diferença entre os fluxos totais e inclui juros e TR evitados sobre o saldo menor. Quitação estimada: ${amortizacao.mesesComAmortizacao} meses.<ul>${comparacoes}</ul>`;
+            resultadoEl.style.display = 'block';
+        } catch (erro) {
+            console.error(erro);
+            recomendacaoEl.className = 'recommendation error';
+            recomendacaoEl.textContent = `Não foi possível carregar os índices atuais do Banco Central. Tente novamente. Detalhe: ${erro.message}`;
+            resultadoEl.style.display = 'block';
+        } finally {
+            botao.disabled = false;
+            document.getElementById('amortizacao-loading').style.display = 'none';
+        }
+    }
+
+    function formatarPercentual(valor) {
+        return `${Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}%`;
     }
 
     function calcularCorrecaoCompleta() {
@@ -415,6 +745,11 @@
     }
 
     carregarSaldoSalvo();
+    carregarDadosAmortizacaoSalvos();
+    ['amortizacao-valor', 'amortizacao-juros', 'amortizacao-prazo', 'amortizacao-modo'].forEach(id => {
+        document.getElementById(id).addEventListener('input', salvarDadosAmortizacao);
+        document.getElementById(id).addEventListener('change', salvarDadosAmortizacao);
+    });
     carregarTRVigente();
 </script>
 
